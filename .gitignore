@@ -2,3 +2,8 @@
 *.m4a
 temp/
 desktop.ini
+
+data/
+.DS_Store
+
+__pycache__/
