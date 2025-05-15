@@ -10,4 +10,7 @@ dependencies = [
     "ipykernel",
     "jupyter",
     "notebook",
+    "ane_transformers ; platform_system == 'Darwin' and platform_machine == 'arm64'",
+    "openai-whisper ; platform_system == 'Darwin' and platform_machine == 'arm64'",
+    "coremltools ; platform_system == 'Darwin' and platform_machine == 'arm64'",
 ]
