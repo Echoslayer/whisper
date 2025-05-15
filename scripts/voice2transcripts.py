@@ -1,5 +1,6 @@
 import os
 import subprocess
+import platform
 
 from env import OUTPUT_AUDIO_FORMAT
 
@@ -82,16 +83,27 @@ def split_audio(input_file, duration_sec):
 def transcribe_audio(clip_files):
     transcript_file = os.path.join(output_dir, "transcription.txt")
 
+    # Check if running on Apple Silicon and Core ML model is available
+    use_coreml = False
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        coreml_model_path = whisper_model.replace(".bin", ".mlmodelc")
+        if os.path.exists(coreml_model_path):
+            use_coreml = True
+            print("🍎 使用 Core ML 模型進行轉錄 (Apple Silicon 裝置)")
+
     with open(transcript_file, "w", encoding="utf-8") as f:
         for clip_filename, start_time, end_time in clip_files:
             print(f"🎤 轉錄 {clip_filename} ...")
 
             cmd = [
                 whisper_exec,
-                "-m", whisper_model,
+                "-m", whisper_model if not use_coreml else coreml_model_path,
                 "-f", clip_filename,
                 "--language", language
             ]
+            
+            if use_coreml:
+                cmd.append("--use-coreml")
 
             try:
                 result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="ignore")
@@ -118,7 +130,7 @@ if __name__ == "__main__":
     clip_duration_sec = 600  # 10 minutes
     output_dir = "./SELF/data/output_clips"
     whisper_exec = "./whisper.cpp/build/bin/whisper-cli"
-    whisper_model = "whisper.cpp/models/ggml-medium.bin" # medium base
+    whisper_model = "whisper.cpp/models/ggml-medium.bin"  # medium base, will check for .mlmodelc on Apple Silicon
     language = "zh"
 
     # **清除舊的檔案**
