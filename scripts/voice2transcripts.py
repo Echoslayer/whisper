@@ -82,11 +82,20 @@ def split_audio(input_file, duration_sec, output_dir):
     return clip_files
 
 # 使用 Whisper.cpp 進行音訊轉錄
-def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language):
-    """Transcribe audio clips using Whisper.cpp."""
+def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename="transcription.txt"):
+    """Transcribe audio clips using Whisper.cpp.
+    
+    Args:
+        clip_files: List of tuples containing (clip_filename, start_time, end_time)
+        output_dir: Directory where audio clips are stored
+        whisper_exec: Path to Whisper.cpp executable
+        whisper_model: Path to Whisper model file
+        language: Language code for transcription
+        transcript_filename: Name of the output transcript file (default: "transcription.txt")
+    """
     transcript_dir = os.path.join(output_dir, "../transcripts")
     Path(transcript_dir).mkdir(parents=True, exist_ok=True)
-    transcript_file = os.path.join(transcript_dir, "transcription.txt")
+    transcript_file = os.path.join(transcript_dir, transcript_filename)
 
     # 檢查是否在 Apple Silicon 上執行並且有 Core ML 模型
     use_coreml = False
@@ -129,6 +138,7 @@ if __name__ == "__main__":
     whisper_exec = "./whisper.cpp/build/bin/whisper-cli"
     whisper_model = "whisper.cpp/models/ggml-medium.bin"  # 會在 Apple Silicon 上檢查是否有 .mlmodelc
     language = "zh"  # 語言設定：zh (中文), en (英文)
+    transcript_filename = "transcription.txt"  # 預設轉錄檔案名稱，可修改
 
     try:
         # 檢查輸入檔案是否存在
@@ -142,7 +152,7 @@ if __name__ == "__main__":
         print("🚀 開始音訊處理與轉錄流程...")
         wav_file = convert_to_wav(input_file, output_dir)
         clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
-        transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language)
-        print(f"🎉 全部處理完成！轉錄結果已儲存至 {os.path.join(output_dir, '../transcripts/transcription.txt')}")
+        transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename)
+        print(f"🎉 全部處理完成！轉錄結果已儲存至 {os.path.join(output_dir, '../transcripts/' + transcript_filename)}")
     except Exception as e:
         print(f"❌ 處理過程中發生錯誤：{e}")
