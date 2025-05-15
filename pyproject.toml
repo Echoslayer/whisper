@@ -1,0 +1,9 @@
+[project]
+name = "yt-audio-downloader"
+version = "0.1.0"
+description = "Download and trim YouTube audio using yt-dlp and ffmpeg"
+
+dependencies = [
+    "yt-dlp",
+    "aider-chat",
+]
