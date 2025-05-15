@@ -1,7 +1,11 @@
 import os
+import sys
 import pytest
 import subprocess
 from pathlib import Path
+
+# Add the parent directory to the path so we can import from scripts
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from scripts.voice2transcripts import clear_output_folder, convert_to_wav, split_audio, transcribe_audio
 
 # Test fixtures

@@ -1,6 +1,10 @@
 import os
 import pytest
 import subprocess
+import sys
+
+# Add the parent directory to the path if needed for any script imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Test fixture for whisper.cpp executable
 @pytest.fixture

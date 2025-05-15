@@ -19,3 +19,4 @@ dependencies = [
 
 [tool.pytest]
 testpaths = ["test"]
+addopts = "-v --durations=10"
