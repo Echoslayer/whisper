@@ -37,7 +37,7 @@ def test_read_transcription(sample_transcription):
     """Test reading a transcription file."""
     content = read_transcription(sample_transcription)
     assert isinstance(content, str)
-    assert "[00:00 - 00:10]" in content
+    assert "[00:00:00 - 00:01:00]" in content
     assert "Hello, this is a test." in content
 
 def test_read_transcription_file_not_found(tmp_path):
