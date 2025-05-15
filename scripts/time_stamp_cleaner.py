@@ -75,8 +75,8 @@ def save_cleaned_transcription(cleaned_segments, output_file):
 if __name__ == "__main__":
     try:
         # Fixed global variables for input and output paths
-        input_transcription_file = "./SELF/data/output_clips/transcription.txt"
-        output_clean_file = "./SELF/data/transcripts/clean_transcription.txt"
+        input_transcription_file = "./data/transcripts/transcription.txt"
+        output_clean_file = "./data/transcripts/clean_transcription.txt"
 
         # Execute the cleaning process
         text = read_transcription(input_transcription_file)
