@@ -5,7 +5,7 @@ import re
 
 # Add the parent directory to the path so we can import from scripts
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from scripts.time_stamp_cleaner import read_transcription, clean_transcription, save_cleaned_transcription
+from scripts.time_stamp_cleaner import clean_transcription, save_cleaned_transcription
 
 # Test fixtures
 @pytest.fixture
@@ -35,22 +35,10 @@ def empty_transcription(tmp_path):
     return str(transcription_file)
 
 # Tests for time_stamp_cleaner.py functions
-def test_read_transcription(sample_transcription):
-    """Test reading a transcription file."""
-    content = read_transcription(sample_transcription)
-    assert isinstance(content, str)
-    assert "[00:00:00 - 00:01:00]" in content
-    assert "Aesha Kriya" in content
-
-def test_read_transcription_file_not_found(tmp_path):
-    """Test reading a non-existent transcription file."""
-    non_existent_file = str(tmp_path / "non_existent.txt")
-    with pytest.raises(FileNotFoundError, match=r"Transcription file not found: .*non_existent\.txt"):
-        read_transcription(non_existent_file)
-
 def test_clean_transcription(sample_transcription):
     """Test cleaning transcription content."""
-    content = read_transcription(sample_transcription)
+    with open(sample_transcription, 'r', encoding='utf-8') as f:
+        content = f.read()
     cleaned_segments = clean_transcription(content)
     
     assert len(cleaned_segments) == 2
@@ -61,7 +49,8 @@ def test_clean_transcription(sample_transcription):
 
 def test_clean_transcription_empty(empty_transcription):
     """Test cleaning an empty transcription file."""
-    content = read_transcription(empty_transcription)
+    with open(empty_transcription, 'r', encoding='utf-8') as f:
+        content = f.read()
     cleaned_segments = clean_transcription(content)
     assert len(cleaned_segments) == 0
 

@@ -2,23 +2,7 @@ import re
 import os
 from pathlib import Path
 
-def read_transcription(file_path):
-    """Read the transcription text from a file.
-    
-    Args:
-        file_path (str): Path to the transcription file.
-        
-    Returns:
-        str: Content of the transcription file.
-        
-    Raises:
-        FileNotFoundError: If the specified file does not exist.
-        IOError: If there's an error reading the file.
-    """
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Transcription file not found: {file_path}")
-    with open(file_path, "r", encoding="utf-8") as f:
-        return f.read()
+# Removed read_transcription function as we'll use direct file reading with 'with open'
 
 def clean_transcription(text):
     """Clean the transcription text by removing per-sentence timestamps and keeping time interval headers.
@@ -76,7 +60,10 @@ if __name__ == "__main__":
         output_clean_file = "./data/transcripts/clean_transcription.txt"
 
         # Execute the cleaning process
-        text = read_transcription(input_transcription_file)
+        if not os.path.exists(input_transcription_file):
+            raise FileNotFoundError(f"Transcription file not found: {input_transcription_file}")
+        with open(input_transcription_file, "r", encoding="utf-8") as f:
+            text = f.read()
         cleaned_segments = clean_transcription(text)
         save_cleaned_transcription(cleaned_segments, output_clean_file)
 
