@@ -40,7 +40,7 @@ def clean_transcription(text):
 
     for i in range(1, len(sections), 2):  # Process each block
         header = sections[i].strip()  # Time interval header
-        content = sections[i + 1]  # Content of the segment
+        content = sections[i + 1] if i + 1 < len(sections) else ""  # Content of the segment
         
         # Remove per-sentence timestamps like [00:00:00.000 --> 00:00:02.000]
         cleaned_text = re.sub(r"\[\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\]", "", content)
