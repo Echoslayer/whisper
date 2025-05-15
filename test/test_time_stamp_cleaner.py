@@ -12,12 +12,14 @@ from scripts.time_stamp_cleaner import read_transcription, clean_transcription, 
 def sample_transcription(tmp_path):
     """Create a sample transcription file for testing."""
     content = """[00:00:00 - 00:01:00]
-[00:00:00.000 --> 00:00:02.000] Hello, this is a test.
-[00:00:02.000 --> 00:00:04.000] This is another line.
+[00:00:00.000 --> 00:00:06.700]  Aesha Kriya是一個非常簡單的工具,但也很強烈的工具
+[00:00:06.700 --> 00:00:12.520]  這三個材料,你的呼吸,你的思考,你的意識
+[00:00:12.520 --> 00:00:18.400]  如果你使用它們,你能夠使用心理和身體
+[00:00:18.400 --> 00:00:24.200]  會變得如此有力量,你會變得像其他人一樣的超人
 
 [00:01:00 - 00:02:00]
-[00:01:00.000 --> 00:01:02.000] Another segment here.
-[00:01:02.000 --> 00:01:04.000] More text in this segment.
+[00:01:00.000 --> 00:01:02.000]  但我告訴你,這是人的
+[00:01:02.000 --> 00:01:04.000]  這是我們的本質
 """
     transcription_file = tmp_path / "transcription.txt"
     with open(transcription_file, 'w', encoding='utf-8') as f:
@@ -53,9 +55,9 @@ def test_clean_transcription(sample_transcription):
     
     assert len(cleaned_segments) == 2
     assert cleaned_segments[0].startswith("[00:00:00 - 00:01:00]")
-    assert "Hello, this is a test. This is another line." in cleaned_segments[0]
+    assert "Aesha Kriya是一個非常簡單的工具,但也很強烈的工具 這三個材料,你的呼吸,你的思考,你的意識 如果你使用它們,你能夠使用心理和身體 會變得如此有力量,你會變得像其他人一樣的超人" in cleaned_segments[0]
     assert cleaned_segments[1].startswith("[00:01:00 - 00:02:00]")
-    assert "Another segment here. More text in this segment." in cleaned_segments[1]
+    assert "但我告訴你,這是人的 這是我們的本質" in cleaned_segments[1]
 
 def test_clean_transcription_empty(empty_transcription):
     """Test cleaning an empty transcription file."""
