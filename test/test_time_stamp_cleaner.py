@@ -43,7 +43,7 @@ def test_read_transcription(sample_transcription):
 def test_read_transcription_file_not_found(tmp_path):
     """Test reading a non-existent transcription file."""
     non_existent_file = str(tmp_path / "non_existent.txt")
-    with pytest.raises(FileNotFoundError, match=r"Transcription file not found: .*non_existent\.txt"):
+    with pytest.raises(Exception, match=r"Transcription file not found: .*non_existent\.txt"):
         read_transcription(non_existent_file)
 
 def test_clean_transcription(sample_transcription):

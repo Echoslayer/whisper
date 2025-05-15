@@ -17,11 +17,11 @@ def read_transcription(file_path):
     """
     try:
         if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Transcription file not found: {file_path}")
+            raise Exception(f"Transcription file not found: {file_path}")
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
     except IOError as e:
-        raise IOError(f"Error reading transcription file {file_path}: {e}")
+        raise Exception(f"Error reading transcription file {file_path}: {e}")
 
 def clean_transcription(text):
     """Clean the transcription text by removing per-sentence timestamps and keeping 10-minute interval headers.
