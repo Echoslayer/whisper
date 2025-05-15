@@ -44,7 +44,7 @@ def clean_transcription(text):
         
         # Remove per-sentence timestamps like [00:00:00.000 --> 00:00:02.000]
         cleaned_text = re.sub(r"\[\d{2,3}:\d{2}:\d{2}\.\d{3} --> \d{2,3}:\d{2}:\d{2}\.\d{3}\]", "", content)
-        cleaned_text = cleaned_text.replace("\n", " ").strip()  # Convert content to a single line
+        cleaned_text = re.sub(r"\s+", " ", cleaned_text.replace("\n", " ")).strip()  # Convert content to a single line with normalized spaces
 
         # Only keep segments with content
         if cleaned_text:
