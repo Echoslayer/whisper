@@ -6,4 +6,7 @@ description = "Download and trim YouTube audio using yt-dlp and ffmpeg"
 dependencies = [
     "yt-dlp",
     "aider-chat",
+    "requests",
+    "ipykernel",
+    "jupyter",
 ]
