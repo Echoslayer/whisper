@@ -13,4 +13,9 @@ dependencies = [
     "ane_transformers ; platform_system == 'Darwin' and platform_machine == 'arm64'",
     "openai-whisper ; platform_system == 'Darwin' and platform_machine == 'arm64'",
     "coremltools ; platform_system == 'Darwin' and platform_machine == 'arm64'",
+    "pytest",
+    "pytest-mock",
 ]
+
+[tool.pytest]
+testpaths = ["test"]
