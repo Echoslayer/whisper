@@ -11,13 +11,13 @@ from scripts.time_stamp_cleaner import read_transcription, clean_transcription, 
 @pytest.fixture
 def sample_transcription(tmp_path):
     """Create a sample transcription file for testing."""
-    content = """[00:00 - 00:10]
+    content = """[00:00:00 - 00:01:00]
 [00:00:00.000 --> 00:00:02.000] Hello, this is a test.
 [00:00:02.000 --> 00:00:04.000] This is another line.
 
-[00:10 - 00:20]
-[00:10:00.000 --> 00:10:02.000] Another segment here.
-[00:10:02.000 --> 00:10:04.000] More text in this segment.
+[00:01:00 - 00:02:00]
+[00:01:00.000 --> 00:01:02.000] Another segment here.
+[00:01:02.000 --> 00:01:04.000] More text in this segment.
 """
     transcription_file = tmp_path / "transcription.txt"
     with open(transcription_file, 'w', encoding='utf-8') as f:
@@ -52,9 +52,9 @@ def test_clean_transcription(sample_transcription):
     cleaned_segments = clean_transcription(content)
     
     assert len(cleaned_segments) == 2
-    assert cleaned_segments[0].startswith("[00:00 - 00:10]")
+    assert cleaned_segments[0].startswith("[00:00:00 - 00:01:00]")
     assert "Hello, this is a test. This is another line." in cleaned_segments[0]
-    assert cleaned_segments[1].startswith("[00:10 - 00:20]")
+    assert cleaned_segments[1].startswith("[00:01:00 - 00:02:00]")
     assert "Another segment here. More text in this segment." in cleaned_segments[1]
 
 def test_clean_transcription_empty(empty_transcription):

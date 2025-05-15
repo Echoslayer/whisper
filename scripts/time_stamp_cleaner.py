@@ -24,7 +24,7 @@ def read_transcription(file_path):
         raise Exception(f"Error reading transcription file {file_path}: {e}")
 
 def clean_transcription(text):
-    """Clean the transcription text by removing per-sentence timestamps and keeping 10-minute interval headers.
+    """Clean the transcription text by removing per-sentence timestamps and keeping time interval headers.
     The content of each segment is converted to a single line.
     
     Args:
@@ -35,15 +35,15 @@ def clean_transcription(text):
     """
     cleaned_segments = []
     
-    # Split text by 10-minute interval headers (supports over 100 minutes)
-    sections = re.split(r"(\[\d{2,3}:\d{2} - \d{2,3}:\d{2}\])\n", text)
+    # Split text by time interval headers (supports over 100 minutes)
+    sections = re.split(r"(\[\d{2}:\d{2}:\d{2} - \d{2}:\d{2}:\d{2}\])\n", text)
 
     for i in range(1, len(sections), 2):  # Process each block
-        header = sections[i].strip()  # 10-minute interval header
+        header = sections[i].strip()  # Time interval header
         content = sections[i + 1]  # Content of the segment
         
         # Remove per-sentence timestamps like [00:00:00.000 --> 00:00:02.000]
-        cleaned_text = re.sub(r"\[\d{2,3}:\d{2}:\d{2}\.\d{3} --> \d{2,3}:\d{2}:\d{2}\.\d{3}\]", "", content)
+        cleaned_text = re.sub(r"\[\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\]", "", content)
         cleaned_text = re.sub(r"\s+", " ", cleaned_text.replace("\n", " ")).strip()  # Convert content to a single line with normalized spaces
 
         # Only keep segments with content
