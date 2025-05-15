@@ -128,7 +128,7 @@ if __name__ == "__main__":
     output_dir = "./SELF/data/output_clips"
     whisper_exec = "./whisper.cpp/build/bin/whisper-cli"
     whisper_model = "whisper.cpp/models/ggml-medium.bin"  # 會在 Apple Silicon 上檢查是否有 .mlmodelc
-    language = "zh"  # 語言設定：zh (中文), en (英文)
+    language = "en"  # 語言設定：zh (中文), en (英文)
 
     try:
         # 檢查輸入檔案是否存在
