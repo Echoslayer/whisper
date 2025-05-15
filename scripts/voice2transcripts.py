@@ -122,16 +122,14 @@ def transcribe_audio(clip_files):
                 print(f"❌ UnicodeDecodeError: {e}. 嘗試繼續轉錄下一個片段...")
                 continue
 
-    print("✅ 轉錄完成，結果已儲存至 transcription.txt")
-
 if __name__ == "__main__":
     # 固定的全域變數
-    input_file = "./SELF/data/audio/20250218LLMMT.m4a"
+    input_file = "./data/audio/full_audio.m4a"
     clip_duration_sec = 600  # 10 minutes
-    output_dir = "./SELF/data/output_clips"
+    output_dir = "./data/output_clips"
     whisper_exec = "./whisper.cpp/build/bin/whisper-cli"
     whisper_model = "whisper.cpp/models/ggml-medium.bin"  # medium base, will check for .mlmodelc on Apple Silicon
-    language = "zh"
+    language = "en"
 
     # **清除舊的檔案**
     clear_output_folder()
