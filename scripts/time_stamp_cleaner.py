@@ -15,13 +15,10 @@ def read_transcription(file_path):
         FileNotFoundError: If the specified file does not exist.
         IOError: If there's an error reading the file.
     """
-    try:
-        if not os.path.exists(file_path):
-            raise Exception(f"Transcription file not found: {file_path}")
-        with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
-    except IOError as e:
-        raise Exception(f"Error reading transcription file {file_path}: {e}")
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Transcription file not found: {file_path}")
+    with open(file_path, "r", encoding="utf-8") as f:
+        return f.read()
 
 def clean_transcription(text):
     """Clean the transcription text by removing per-sentence timestamps and keeping time interval headers.
@@ -84,7 +81,9 @@ if __name__ == "__main__":
         save_cleaned_transcription(cleaned_segments, output_clean_file)
 
         print(f"✅ 逐字稿清理完成，結果已儲存至 {output_clean_file}")
-    except (FileNotFoundError, IOError) as e:
-        print(f"❌ 處理過程中發生錯誤：{e}")
+    except FileNotFoundError as e:
+        print(f"❌ 找不到檔案：{e}")
+    except IOError as e:
+        print(f"❌ 讀取或寫入檔案時發生錯誤：{e}")
     except Exception as e:
         print(f"❌ 未知錯誤：{e}")
