@@ -131,6 +131,10 @@ if __name__ == "__main__":
     language = "zh"  # 語言設定：zh (中文), en (英文)
 
     try:
+        # 檢查輸入檔案是否存在
+        if not os.path.exists(input_file):
+            raise FileNotFoundError(f"❌ 找不到輸入音訊檔案：{input_file}")
+
         # 清除舊的檔案
         clear_output_folder(output_dir)
 
