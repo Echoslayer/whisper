@@ -16,6 +16,7 @@ dependencies = [
     "coremltools ; platform_system == 'Darwin' and platform_machine == 'arm64'",
     "pytest",
     "pytest-mock",
+    "openai",
 ]
 
 [tool.pytest]
