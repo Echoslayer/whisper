@@ -1,20 +1,123 @@
 .
 ├── data
 │   ├── audio
+│   │   ├── demo
+│   │   │   ├── demo1.wav
+│   │   │   └── demo2.wav
 │   │   ├── full_audio.m4a
 │   │   ├── Isha Kriya.mp3
 │   │   └── test.wav
-│   ├── output_clips
-│   │   ├── clip_001.wav
-│   │   ├── clip_002.wav
-│   │   ├── converted.wav
-│   │   └── timestamps.txt
-│   └── transcripts
-│       ├── clean_transcription.txt
-│       └── transcription.txt
+│   └── output_clips
+│       ├── clip_001.wav
+│       ├── clip_002.wav
+│       ├── clip_003.wav
+│       ├── clip_004.wav
+│       ├── clip_005.wav
+│       ├── clip_006.wav
+│       ├── clip_007.wav
+│       ├── clip_008.wav
+│       ├── clip_009.wav
+│       ├── clip_010.wav
+│       ├── clip_011.wav
+│       ├── clip_012.wav
+│       ├── clip_013.wav
+│       ├── clip_014.wav
+│       ├── clip_015.wav
+│       ├── clip_016.wav
+│       ├── clip_017.wav
+│       ├── clip_018.wav
+│       ├── clip_019.wav
+│       ├── clip_020.wav
+│       ├── clip_021.wav
+│       ├── clip_022.wav
+│       ├── clip_023.wav
+│       ├── clip_024.wav
+│       ├── clip_025.wav
+│       ├── clip_026.wav
+│       ├── clip_027.wav
+│       ├── clip_028.wav
+│       ├── clip_029.wav
+│       ├── clip_030.wav
+│       ├── clip_031.wav
+│       ├── clip_032.wav
+│       ├── clip_033.wav
+│       ├── clip_034.wav
+│       ├── clip_035.wav
+│       ├── clip_036.wav
+│       ├── clip_037.wav
+│       ├── clip_038.wav
+│       ├── clip_039.wav
+│       ├── clip_040.wav
+│       ├── clip_041.wav
+│       ├── clip_042.wav
+│       ├── clip_043.wav
+│       ├── clip_044.wav
+│       ├── clip_045.wav
+│       ├── clip_046.wav
+│       ├── clip_047.wav
+│       ├── clip_048.wav
+│       ├── clip_049.wav
+│       ├── clip_050.wav
+│       ├── clip_051.wav
+│       ├── clip_052.wav
+│       ├── clip_053.wav
+│       ├── clip_054.wav
+│       ├── clip_055.wav
+│       ├── clip_056.wav
+│       ├── clip_057.wav
+│       ├── clip_058.wav
+│       ├── clip_059.wav
+│       ├── clip_060.wav
+│       ├── clip_061.wav
+│       ├── clip_062.wav
+│       ├── clip_063.wav
+│       ├── clip_064.wav
+│       ├── clip_065.wav
+│       ├── clip_066.wav
+│       ├── clip_067.wav
+│       ├── clip_068.wav
+│       ├── clip_069.wav
+│       ├── clip_070.wav
+│       ├── clip_071.wav
+│       ├── clip_072.wav
+│       ├── clip_073.wav
+│       ├── clip_074.wav
+│       ├── clip_075.wav
+│       ├── clip_076.wav
+│       ├── clip_077.wav
+│       ├── clip_078.wav
+│       ├── clip_079.wav
+│       ├── clip_080.wav
+│       ├── clip_081.wav
+│       ├── clip_082.wav
+│       ├── clip_083.wav
+│       ├── clip_084.wav
+│       ├── clip_085.wav
+│       ├── clip_086.wav
+│       ├── clip_087.wav
+│       ├── clip_088.wav
+│       ├── clip_089.wav
+│       ├── clip_090.wav
+│       ├── clip_091.wav
+│       ├── clip_092.wav
+│       ├── clip_093.wav
+│       ├── clip_094.wav
+│       ├── clip_095.wav
+│       ├── clip_096.wav
+│       ├── clip_097.wav
+│       ├── clip_098.wav
+│       ├── clip_099.wav
+│       ├── clip_100.wav
+│       ├── clip_101.wav
+│       ├── clip_102.wav
+│       ├── clip_103.wav
+│       ├── clip_104.wav
+│       ├── converted.wav
+│       └── timestamps.txt
 ├── doc
 │   └── doc_tree.md
 ├── notebooks
+│   ├── gen_folder_transcripts.ipynb
 │   ├── gen_transcript.ipynb
 │   ├── temporary_storage.ipynb
 │   ├── whisper.ipynb
@@ -1926,4 +2029,4 @@
         ├── test-vad.cpp
         └── test-whisper.js
 
-335 directories, 1592 files
+335 directories, 1695 files

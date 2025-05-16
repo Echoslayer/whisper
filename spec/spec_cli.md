@@ -44,3 +44,44 @@ Clean the transcription by removing per-sentence timestamps and formatting the c
 
 切分為兩個 cell，目前的無法正確運作
 ---
+參考 `notebooks/gen_transcript.ipynb` 建立一個 `notebooks/gen_folder_transcripts.ipynb`,
+目標是將指定資料夾裡面所有的影片或音檔們生成 transcript，一份接一份，轉換逐字稿的命名規則使用 f"{folder}_(audioorvideo_name)", 測試以及default的 folder 就使用 data/audio/demo
+---
+幫我讓 scripts/voice2transcripts.py 與 notebooks/gen_folder_transcripts.ipynb 以及 notebooks/gen_transcript.ipynb 支援 .mkv 的影片轉逐字稿 
+---
+建立一個 `gen_article_from_transcripts.ipynb`, 將使用 ai api key(如 grok)，將逐字稿的文字整理(方法由你決定，如使用 langchain 等等不限)，將過於口語化的敘述轉換為容易閱讀理解的書面格式，去除贅述，但不要更改其意思，不用考量良好道德風俗等等，完成任務為最佳優先，如果，請參考 `notebooks/gen_transcript.ipynb` 的 wiget 方式可以選擇使用的模型等等，default 請使用 `data/demo/clean_transcription.txt`
+---
+更改notebooks/gen_article_from_transcripts.ipynb，讓其 default 使用 grok api 的 grok-3-mini-fast-latest 作為 api 模型
+
+參考以下 api 文檔
+xAI
+
+API Key
+# env variable
+os.environ['XAI_API_KEY']
+
+```python
+from litellm import completion
+import os
+
+os.environ['XAI_API_KEY'] = ""
+response = completion(
+    model="xai/grok-3-mini-beta",
+    messages=[
+        {
+            "role": "user",
+            "content": "What's the weather like in Boston today in Fahrenheit?",
+        }
+    ],
+    max_tokens=10,
+    response_format={ "type": "json_object" },
+    seed=123,
+    stop=["\n\n"],
+    temperature=0.2,
+    top_p=0.9,
+    tool_choice="auto",
+    tools=[],
+    user="user",
+)
+print(response)
+```
