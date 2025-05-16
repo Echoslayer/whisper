@@ -78,7 +78,7 @@ def split_audio(input_file, duration_sec, output_dir):
     with open(os.path.join(output_dir, "timestamps.txt"), "w", encoding="utf-8") as f:
         f.writelines(timestamps)
     
-    print(f"✅ 音訊切割完成，共 {len(clip_files)} 個片段，時間戳已儲存至 timestamps.txt")
+    print(f"✅ 音訊切割完成，共 {len(clip_files)} 個片段，時間戳已儲存")
     return clip_files
 
 # 使用 Whisper.cpp 進行音訊轉錄
