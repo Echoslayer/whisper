@@ -18,6 +18,7 @@ dependencies = [
     "pytest-mock",
     "litellm",
     "python-dotenv",
+    "openai",
 ]
 
 [tool.pytest]
