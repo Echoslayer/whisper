@@ -142,14 +142,17 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
                     adjusted_start_secs = start_secs + start_time
                     adjusted_end_secs = end_secs + start_time
                     
-                    # Convert back to SRT format
+                    # Convert back to SRT format (using comma as decimal separator)
                     adj_start_str = f"{int(adjusted_start_secs) // 3600:02d}:{(int(adjusted_start_secs) % 3600) // 60:02d}:{adjusted_start_secs % 60:06.3f}".replace('.', ',')
                     adj_end_str = f"{int(adjusted_end_secs) // 3600:02d}:{(int(adjusted_end_secs) % 3600) // 60:02d}:{adjusted_end_secs % 60:06.3f}".replace('.', ',')
+                    
+                    # Clean the content by removing any additional timestamp information
+                    clean_content = re.sub(r"\[\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\]", "", content).strip()
                     
                     # Split long text into multiple lines if necessary (max 70 chars per line)
                     lines = []
                     current_line = ""
-                    for word in content.strip().split():
+                    for word in clean_content.split():
                         if len(current_line + word) < 70:
                             current_line += word + " "
                         else:
