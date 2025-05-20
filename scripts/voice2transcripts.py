@@ -82,8 +82,8 @@ def split_audio(input_file, duration_sec, output_dir):
     return clip_files
 
 # 使用 Whisper.cpp 進行音訊轉錄
-def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename="transcription.txt"):
-    """Transcribe audio clips using Whisper.cpp.
+def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename="transcription.txt", srt_filename="subtitles.srt"):
+    """Transcribe audio clips using Whisper.cpp and generate both transcript and SRT files.
     
     Args:
         clip_files: List of tuples containing (clip_filename, start_time, end_time)
@@ -92,10 +92,12 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
         whisper_model: Path to Whisper model file
         language: Language code for transcription
         transcript_filename: Name of the output transcript file (default: "transcription.txt")
+        srt_filename: Name of the output SRT file (default: "subtitles.srt")
     """
     transcript_dir = os.path.join(output_dir, "../transcripts")
     Path(transcript_dir).mkdir(parents=True, exist_ok=True)
     transcript_file = os.path.join(transcript_dir, transcript_filename)
+    srt_file = os.path.join(transcript_dir, srt_filename)
 
     # 檢查是否在 Apple Silicon 上執行並且有 Core ML 模型
     use_coreml = False
@@ -105,8 +107,9 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
             use_coreml = True
             print("🍎 使用 Core ML 模型進行轉錄 (Apple Silicon 裝置)")
 
-    with open(transcript_file, "w", encoding="utf-8") as f:
+    with open(transcript_file, "w", encoding="utf-8") as f_txt, open(srt_file, "w", encoding="utf-8") as f_srt:
         total_clips = len(clip_files)
+        srt_index = 1
         for i, (clip_filename, start_time, end_time) in enumerate(clip_files, 1):
             print(f"🎤 轉錄片段 {i}/{total_clips}: {os.path.basename(clip_filename)} ...")
             cmd = [whisper_exec, "-m", whisper_model if not use_coreml else coreml_model_path,
@@ -124,11 +127,30 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
                 start_time_str = f"{int(start_time) // 3600:02d}:{(int(start_time) % 3600) // 60:02d}:{int(start_time) % 60:02d}"
                 end_time_str = f"{int(end_time) // 3600:02d}:{(int(end_time) % 3600) // 60:02d}:{int(end_time) % 60:02d}"
                 timestamp = f"[{start_time_str} - {end_time_str}]"
-                f.write(f"{timestamp}\n{text}\n\n")
+                f_txt.write(f"{timestamp}\n{text}\n\n")
+                
+                # Generate SRT entry
+                srt_start = f"{start_time_str},000"
+                srt_end = f"{end_time_str},000"
+                # Split long text into multiple lines if necessary (max 70 chars per line)
+                lines = []
+                current_line = ""
+                for word in text.split():
+                    if len(current_line + word) < 70:
+                        current_line += word + " "
+                    else:
+                        lines.append(current_line.strip())
+                        current_line = word + " "
+                if current_line:
+                    lines.append(current_line.strip())
+                f_srt.write(f"{srt_index}\n{srt_start} --> {srt_end}\n" + "\n".join(lines) + "\n\n")
+                srt_index += 1
+                
                 print(f"✅ 片段 {i}/{total_clips} 轉錄完成")
             except Exception as e:
                 print(f"❌ 轉錄片段 {i}/{total_clips} 時發生錯誤: {e}. 繼續處理下一個片段...")
                 continue
+    print(f"🎬 SRT 檔案已生成：{srt_file}")
 
 if __name__ == "__main__":
     # 設定全域變數
@@ -154,5 +176,6 @@ if __name__ == "__main__":
         clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
         transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename)
         print(f"🎉 全部處理完成！轉錄結果已儲存至 {os.path.join(output_dir, '../transcripts/' + transcript_filename)}")
+        print(f"🎬 SRT 檔案已儲存至 {os.path.join(output_dir, '../transcripts/subtitles.srt')}")
     except Exception as e:
         print(f"❌ 處理過程中發生錯誤：{e}")
