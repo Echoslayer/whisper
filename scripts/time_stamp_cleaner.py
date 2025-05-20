@@ -26,10 +26,8 @@ def clean_transcription(text):
         header = sections[i].strip()  # Time interval header
         content = sections[i + 1] if i + 1 < len(sections) else ""  # Content of the segment
         
-        # Remove per-sentence timestamps like [00:00:00.000 --> 00:00:02.000]
-        cleaned_text = re.sub(r"\[\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\]", "", content)
-        # Remove any other timestamp formats that might appear
-        cleaned_text = re.sub(r"\[\d{2}:\d{2}\.\d{3}\]", "", cleaned_text)
+        # Remove all timestamps within square brackets from content
+        cleaned_text = re.sub(r"\[.*?\]", "", content)
         cleaned_text = re.sub(r"\s+", " ", cleaned_text.replace("\n", " ")).strip()  # Convert content to a single line with normalized spaces
 
         # Only keep segments with content
