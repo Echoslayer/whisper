@@ -94,6 +94,8 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
         transcript_filename: Name of the output transcript file (default: "transcription.txt")
         srt_filename: Name of the output SRT file (default: "subtitles.srt")
     """
+    import re
+    
     transcript_dir = os.path.join(output_dir, "../transcripts")
     Path(transcript_dir).mkdir(parents=True, exist_ok=True)
     transcript_file = os.path.join(transcript_dir, transcript_filename)
@@ -113,7 +115,7 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
         for i, (clip_filename, start_time, end_time) in enumerate(clip_files, 1):
             print(f"🎤 轉錄片段 {i}/{total_clips}: {os.path.basename(clip_filename)} ...")
             cmd = [whisper_exec, "-m", whisper_model if not use_coreml else coreml_model_path,
-                   "-f", clip_filename, "--language", language]
+                   "-f", clip_filename, "--language", language, "--timestamps", "1"]
             
             if use_coreml:
                 cmd.append("--use-coreml")
@@ -129,22 +131,35 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
                 timestamp = f"[{start_time_str} - {end_time_str}]"
                 f_txt.write(f"{timestamp}\n{text}\n\n")
                 
-                # Generate SRT entry
-                srt_start = f"{start_time_str},000"
-                srt_end = f"{end_time_str},000"
-                # Split long text into multiple lines if necessary (max 70 chars per line)
-                lines = []
-                current_line = ""
-                for word in text.split():
-                    if len(current_line + word) < 70:
-                        current_line += word + " "
-                    else:
+                # Parse Whisper output for SRT timestamps
+                timestamp_pattern = r"\[(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})\]\s+(.+)"
+                matches = re.findall(timestamp_pattern, text)
+                
+                for start, end, content in matches:
+                    # Adjust timestamps by adding the clip's start time
+                    start_secs = sum(float(x) * 60 ** (2 - i) for i, x in enumerate(start.split(':')))
+                    end_secs = sum(float(x) * 60 ** (2 - i) for i, x in enumerate(end.split(':')))
+                    adjusted_start_secs = start_secs + start_time
+                    adjusted_end_secs = end_secs + start_time
+                    
+                    # Convert back to SRT format
+                    adj_start_str = f"{int(adjusted_start_secs) // 3600:02d}:{(int(adjusted_start_secs) % 3600) // 60:02d}:{adjusted_start_secs % 60:06.3f}".replace('.', ',')
+                    adj_end_str = f"{int(adjusted_end_secs) // 3600:02d}:{(int(adjusted_end_secs) % 3600) // 60:02d}:{adjusted_end_secs % 60:06.3f}".replace('.', ',')
+                    
+                    # Split long text into multiple lines if necessary (max 70 chars per line)
+                    lines = []
+                    current_line = ""
+                    for word in content.strip().split():
+                        if len(current_line + word) < 70:
+                            current_line += word + " "
+                        else:
+                            lines.append(current_line.strip())
+                            current_line = word + " "
+                    if current_line:
                         lines.append(current_line.strip())
-                        current_line = word + " "
-                if current_line:
-                    lines.append(current_line.strip())
-                f_srt.write(f"{srt_index}\n{srt_start} --> {srt_end}\n" + "\n".join(lines) + "\n\n")
-                srt_index += 1
+                    
+                    f_srt.write(f"{srt_index}\n{adj_start_str} --> {adj_end_str}\n" + "\n".join(lines) + "\n\n")
+                    srt_index += 1
                 
                 print(f"✅ 片段 {i}/{total_clips} 轉錄完成")
             except Exception as e:
