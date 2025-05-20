@@ -16,6 +16,9 @@ def clean_transcription(text):
     """
     cleaned_segments = []
     
+    if not text or len(text.strip()) == 0:
+        return cleaned_segments
+        
     # Split text by time interval headers (supports over 100 minutes)
     sections = re.split(r"(\[\d{2}:\d{2}:\d{2} - \d{2}:\d{2}:\d{2}\])\n", text)
 
@@ -25,6 +28,8 @@ def clean_transcription(text):
         
         # Remove per-sentence timestamps like [00:00:00.000 --> 00:00:02.000]
         cleaned_text = re.sub(r"\[\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\]", "", content)
+        # Remove any other timestamp formats that might appear
+        cleaned_text = re.sub(r"\[\d{2}:\d{2}\.\d{3}\]", "", cleaned_text)
         cleaned_text = re.sub(r"\s+", " ", cleaned_text.replace("\n", " ")).strip()  # Convert content to a single line with normalized spaces
 
         # Only keep segments with content
