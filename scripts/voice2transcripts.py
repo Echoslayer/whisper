@@ -110,7 +110,7 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
         for i, (clip_filename, start_time, end_time) in enumerate(clip_files, 1):
             print(f"🎤 轉錄片段 {i}/{total_clips}: {os.path.basename(clip_filename)} ...")
             cmd = [whisper_exec, "-m", whisper_model if not use_coreml else coreml_model_path,
-                   "-f", clip_filename, "--language", language, "--timestamps", "1"]
+                   "-f", clip_filename, "-l", language]
             
             if use_coreml:
                 cmd.append("--use-coreml")
