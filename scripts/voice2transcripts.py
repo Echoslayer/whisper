@@ -178,9 +178,10 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
     if use_threads:
         print(f"🧵 使用多線程進行轉錄，線程數：{workers}")
         results_queue = Queue()
-        transcribe_with_threads(tasks[:workers], results_queue)
+        # Fix: Use all tasks, not just a subset limited by workers
+        transcribe_with_threads(tasks, results_queue)
         # Collect results in order
-        temp_results = [results_queue.get() for _ in range(len(tasks[:workers]))]
+        temp_results = [results_queue.get() for _ in range(len(tasks))]
         temp_results.sort(key=lambda x: x[0])  # Sort by clip_index
         results = [r[1] for r in temp_results]
     else:
@@ -193,6 +194,7 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
         for result in results:
             if result:
                 f_txt.write(result)
+    print(f"🎉 轉錄處理完成！轉錄結果已儲存至 {transcript_file}")
 
 if __name__ == "__main__":
     # 設定全域變數
