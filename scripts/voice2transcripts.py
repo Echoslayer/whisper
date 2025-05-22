@@ -3,6 +3,8 @@ import subprocess
 import platform
 from pathlib import Path
 from multiprocessing import Pool
+from threading import Thread
+from queue import Queue
 
 # 清除輸出資料夾的所有檔案
 def clear_output_folder(output_dir):
@@ -124,8 +126,24 @@ def transcribe_single_clip(args):
         print(f"❌ 轉錄片段 {clip_index}/{total_clips} 時發生錯誤: {e}. 繼續處理下一個片段...")
         return ""
 
-# 使用 Whisper.cpp 進行音訊轉錄
-def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename="transcription.txt", workers=2):
+# 使用多線程進行轉錄
+def transcribe_with_threads(tasks, results_queue):
+    """Helper function to transcribe clips using threads."""
+    def worker(task):
+        result = transcribe_single_clip(task)
+        results_queue.put((task[7], result))  # task[7] is clip_index
+
+    threads = []
+    for task in tasks:
+        thread = Thread(target=worker, args=(task,))
+        thread.start()
+        threads.append(thread)
+
+    for thread in threads:
+        thread.join()
+
+# 使用 Whisper.cpp 進行音訊轉錄，支持多線程或多進程
+def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename="transcription.txt", workers=2, use_threads=True):
     """Transcribe audio clips using Whisper.cpp and generate transcript file with per-sentence timestamps.
     
     Args:
@@ -135,7 +153,8 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
         whisper_model: Path to Whisper model file
         language: Language code for transcription
         transcript_filename: Name of the output transcript file (default: "transcription.txt")
-        workers: Number of parallel processes to use for transcription (default: 2)
+        workers: Number of parallel threads or processes to use for transcription (default: 2)
+        use_threads: If True, use multithreading; if False, use multiprocessing (default: True)
     """
     transcript_dir = os.path.join(output_dir, "../transcripts")
     Path(transcript_dir).mkdir(parents=True, exist_ok=True)
@@ -149,14 +168,25 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
             use_coreml = True
             print("🍎 使用 Core ML 模型進行轉錄 (Apple Silicon 裝置)")
 
-    # Prepare arguments for multiprocessing
+    # Prepare arguments for multiprocessing or multithreading
     total_clips = len(clip_files)
     tasks = [(clip_filename, start_time, end_time, whisper_exec, whisper_model, language, use_coreml, i+1, total_clips)
              for i, (clip_filename, start_time, end_time) in enumerate(clip_files)]
 
-    # Use multiprocessing to transcribe clips in parallel
-    with Pool(processes=workers) as pool:
-        results = pool.map(transcribe_single_clip, tasks)
+    # Use multithreading or multiprocessing to transcribe clips in parallel
+    results = []
+    if use_threads:
+        print(f"🧵 使用多線程進行轉錄，線程數：{workers}")
+        results_queue = Queue()
+        transcribe_with_threads(tasks[:workers], results_queue)
+        # Collect results in order
+        temp_results = [results_queue.get() for _ in range(len(tasks[:workers]))]
+        temp_results.sort(key=lambda x: x[0])  # Sort by clip_index
+        results = [r[1] for r in temp_results]
+    else:
+        print(f"🔄 使用多進程進行轉錄，進程數：{workers}")
+        with Pool(processes=workers) as pool:
+            results = pool.map(transcribe_single_clip, tasks)
 
     # Write results to the transcript file
     with open(transcript_file, "w", encoding="utf-8") as f_txt:
@@ -174,6 +204,7 @@ if __name__ == "__main__":
     language = "zh"  # 語言設定：zh (中文), en (英文)
     transcript_filename = "transcription.txt"  # 預設轉錄檔案名稱，可修改
     workers = 2  # 預設使用 2 個進程進行轉錄
+    use_threads = True  # 預設使用多線程
 
     try:
         # 檢查輸入檔案是否存在
@@ -187,7 +218,7 @@ if __name__ == "__main__":
         print("🚀 開始音訊處理與轉錄流程...")
         wav_file = convert_to_wav(input_file, output_dir)
         clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
-        transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers)
+        transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers, use_threads)
         print(f"🎉 全部處理完成！轉錄結果已儲存至 {os.path.join(output_dir, '../transcripts/' + transcript_filename)}")
     except Exception as e:
         print(f"❌ 處理過程中發生錯誤：{e}")
