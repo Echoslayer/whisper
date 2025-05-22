@@ -1,0 +1,77 @@
+# AI开发者工作流程（ADW）详细流程 - 中文版
+
+本文档是基于提供的英文逐字稿翻译的详细流程，旨在帮助您理解AI开发者工作流程（ADW）的概念和应用。以下是ADW的核心内容和实施步骤：
+
+## 引言
+
+欢迎来到《原则性AI编码》的第六课。本课是高级课程的开始，将介绍如何使用AI编码工具和技术，以前所未有的速度生成大量代码。我们将探索AI开发者工作流程（ADW），这是一种可以自动化解决重复性工程任务的强大技术。
+
+## ADW核心概念
+
+ADW是一种技术，旨在通过识别和利用代码库中的模式，一次性解决一类工程问题。它的目标是消除重复性工作，如迁移文件、API创建、模板化和测试等。
+
+### 原则：KISS（保持简单）
+
+我们将从最基本的层面理解ADW。它的核心在于：
+- **模式识别**：只要存在可重复的模式，ADW就可以用来自动化解决相关问题。
+- **自动化**：通过编写小型脚本包装AI编码助手，解决整类问题。
+
+## 实施步骤
+
+以下是创建和使用ADW的详细步骤：
+
+### 1. 环境设置
+
+- **安装代码库**：从提供的链接下载并安装第六课的代码库。
+- **依赖安装**：使用`uv sync`命令安装必要的依赖。
+- **环境变量**：复制前一课的`.env`文件到当前目录，并重新打开终端以加载环境变量。
+
+### 2. 运行基本ADW
+
+- **执行命令**：运行一个简单的ADW命令，例如版本号递增。
+  - 命令示例：`uv run python adw/versioning.py`
+- **观察结果**：检查`pyproject.toml`文件，确认版本号已从例如`0.1.11`增加到`0.1.12`。
+
+### 3. 理解ADW脚本
+
+- **查看脚本**：打开`adw/versioning.py`文件，了解其工作原理。
+- **关键部分**：
+  - 导入`aider`库。
+  - 定义一个函数`bump_version`，用于增加版本号。
+  - 设置上下文、可编辑文件和只读文件。
+  - 使用简洁的高级提示，例如“patch bump pyproject.toml version number”。
+  - 初始化AI编码助手实例并运行提示。
+
+### 4. 创建新的输出类型
+
+- **运行命令**：使用ADW创建新的输出格式，例如HTML。
+  - 命令示例：`uv run python adw/new_output_type.py "HTML table format output"`
+- **观察结果**：检查代码文件，确认新格式函数`format_as_html`已添加，并更新了`main.py`以支持新格式。
+- **测试输出**：运行主程序生成HTML格式的输出文件，并查看结果。
+  - 命令示例：`uv run python main.py --input transcript.txt --output output_transcript.html --type html`
+
+### 5. 创建新的图表类型
+
+- **运行命令**：使用ADW创建新的图表类型，例如气泡图。
+  - 命令示例：`uv run python adw/new_chart.py "Bubble chart scaling size of bubbles based on word frequency with largest bubble fifth of available space, exaggerate bubble sizes, use colors for different count ranges, overlay words in center of each bubble"`
+- **观察结果**：检查`chart.py`和`main.py`，确认新函数`create_bubble_chart`已添加。
+- **测试输出**：运行主程序生成气泡图，并查看结果。
+  - 命令示例：`uv run python main.py --input transcript.txt --output output_transcript.yaml --chart bubble`
+
+### 6. 使用规范提示（Spec Prompt）
+
+- **结合规范提示**：在ADW中嵌入规范提示，以解决更复杂的问题。
+- **查看文件**：打开`spec/new_chart_type.md`，了解详细的规范提示内容。
+- **替换描述**：在运行ADW时，将规范提示中的描述部分替换为用户提供的描述。
+
+## 使用场景和选择标准
+
+- **常规AI编码会话**：适用于快速修复、代码探索、小任务、调整和原型设计。
+- **规范提示**：适用于可以从头到尾计划的中大型任务，提供更多结构和详细计划。
+- **AI开发者工作流程（ADW）**：适用于代码库中出现重复模式或可重复结构的任务，自动化和扩展解决方案。
+
+## 结论
+
+通过ADW，您可以自动化解决代码库中的重复问题，从而显著提高工程效率。关键在于识别模式，并使用AI编码助手来解决整类问题。建议您在当前工作的代码库中实践ADW，寻找可以自动化的任务。
+
+希望这份中文流程能帮助您更好地理解和应用AI开发者工作流程。继续探索和实践，您将能够以全新的方式进行工程设计和编码。
