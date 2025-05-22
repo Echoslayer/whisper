@@ -16,7 +16,7 @@ conda activate p312
 
 uv sync
 
-uv run aider --model xai/grok-3-beta
+uv run aider --model xai/grok-3
 
 tree -I 'whisper.cpp|output_clips' > doc/doc_tree.md
 

@@ -97,3 +97,5 @@ print(response)
 添加 cell code 可以讓 `clean_transcription` 轉換為 srt 
 ---
 /ask 我是能讓scripts/voice2transcripts.py用多線程或多進程運行的嗎？
+---
+能讓scripts/voice2transcripts.py用多線程或多進程運行的嗎？我主要是想要加速 notebooks/gen_transcript.ipynb 的運行，因為現在太多音檔了，可能IO花太多時間了，如果用到進程請設定worker為參數，預設２，請考慮翻譯順序，因為逐字稿是有時間前後的
