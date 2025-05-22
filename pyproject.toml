@@ -1,6 +1,6 @@
 [project]
 name = "yt-audio-downloader"
-version = "0.1.0"
+version = "1.0.0"
 description = "Download, process, transcribe, and summarize YouTube audio"
 
 dependencies = [

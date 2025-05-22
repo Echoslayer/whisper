@@ -85,3 +85,15 @@ response = completion(
 )
 print(response)
 ```
+---
+幫我在 `notebooks/gen_transcript.ipynb` 添加一個 cell code，是用來轉換非連續的 transcripts.txt 為完整的 .srt file
+---
+也將 srt 轉換 cell 也使用 widget, 跟上面一樣，然後將次cell 移動到新檔案 notebooks/formate_transformer.ipynb 
+---
+讓 `scripts/voice2transcripts.py` 與 `notebooks/gen_transcript.ipynb` 支援一開始就生成 srt 
+--- 
+請修正 srt 的生成，目前不是正常 srt 格式, 請參考錯誤的檔案來進行修正 (錯誤檔案： data/transcripts/subtitles.srt)
+---
+添加 cell code 可以讓 `clean_transcription` 轉換為 srt 
+---
+/ask 我是能讓scripts/voice2transcripts.py用多線程或多進程運行的嗎？

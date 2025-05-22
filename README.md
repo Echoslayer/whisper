@@ -18,6 +18,6 @@ uv sync
 
 uv run aider --model xai/grok-3-beta
 
-tree > doc/doc_tree.md
+tree -I 'whisper.cpp|output_clips' > doc/doc_tree.md
 
 uv run pytest test/
