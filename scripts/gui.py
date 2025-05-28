@@ -422,6 +422,7 @@ class TranscriptionGUI:
             finally:
                 self.is_processing = False
                 self.stop_requested = False
+                self.log_message("ℹ️ Processing finished.", "single")
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
@@ -498,6 +499,7 @@ class TranscriptionGUI:
             finally:
                 self.is_processing = False
                 self.stop_requested = False
+                self.log_message("ℹ️ Processing finished.", "folder")
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
@@ -552,6 +554,7 @@ class TranscriptionGUI:
             finally:
                 self.is_processing = False
                 self.stop_requested = False
+                self.log_message("ℹ️ Cleaning process finished.", "both")
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
@@ -601,6 +604,7 @@ class TranscriptionGUI:
             finally:
                 self.is_processing = False
                 self.stop_requested = False
+                self.log_message("ℹ️ SRT conversion process finished.", "both")
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
@@ -662,6 +666,7 @@ class TranscriptionGUI:
             finally:
                 self.is_processing = False
                 self.stop_requested = False
+                self.log_message("ℹ️ SRT cleaning process finished.", "both")
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
@@ -902,6 +907,7 @@ class TranscriptionGUI:
             finally:
                 self.is_processing = False
                 self.stop_requested = False
+                self.log_message("ℹ️ One-Click SRT process finished.", "both")
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
