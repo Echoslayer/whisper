@@ -14,7 +14,7 @@ class TranscriptionGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Audio Transcription Tool")
-        self.root.geometry("800x600")
+        self.root.geometry("800x800")
         
         # Queue for thread-safe GUI updates
         self.queue = queue.Queue()
@@ -627,9 +627,97 @@ class TranscriptionGUI:
     def one_click_srt(self):
         def run():
             try:
-                output_dir = self.output_dir_single_entry.get() if self.notebook.index(self.notebook.select()) == 0 else self.output_dir_folder_entry.get()
-                transcript_dir = os.path.join(os.path.dirname(output_dir), 'transcripts')
+                # Determine if we're processing a single file or a folder based on the active tab
+                active_tab = self.notebook.index(self.notebook.select())
+                if active_tab == 0:  # Single File Tab
+                    input_source = self.input_file_entry.get()
+                    output_dir = self.output_dir_single_entry.get()
+                    clip_duration_sec = int(self.clip_duration_sec.get())
+                    whisper_exec = self.whisper_exec_single_entry.get()
+                    whisper_model = self.whisper_model_single_entry.get()
+                    language = self.language_single.get()
+                    transcript_filename = self.transcript_filename_entry.get()
+                    workers = int(self.workers_single.get())
+                    use_threads = self.use_threads_single.get() == "Multithreading"
+                    
+                    if not os.path.exists(input_source):
+                        self.log_message(f"❌ Input file not found: {input_source}", "single")
+                        return
+                    
+                    self.log_message("🚀 Starting One-Click SRT Processing for Single File...", "single")
+                    
+                    # Step 1: Process the audio file (transcription)
+                    self.log_message("🚀 Starting audio processing...", "single")
+                    clear_output_folder(output_dir)
+                    wav_file = convert_to_wav(input_source, output_dir)
+                    self.log_message("🔄 Audio converted to WAV format", "single")
+                    clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
+                    self.log_message(f"✅ Audio split into {len(clip_files)} clips", "single")
+                    transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename=transcript_filename, workers=workers, use_threads=use_threads)
+                    transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
+                    self.log_message(f"🎉 Transcription completed! Saved to {transcript_path}", "single")
+                    
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "single")
+                        return
                 
+                else:  # Folder Tab
+                    input_folder = self.input_folder_entry.get()
+                    output_dir = self.output_dir_folder_entry.get()
+                    clip_duration_sec = int(self.clip_duration_min.get()) * 60  # Convert minutes to seconds
+                    whisper_exec = self.whisper_exec_folder_entry.get()
+                    whisper_model = self.whisper_model_folder_entry.get()
+                    language = self.language_folder.get()
+                    workers = int(self.workers_folder.get())
+                    use_threads = self.use_threads_folder.get() == "Multithreading"
+                    rest_time = int(self.rest_time.get())
+                    
+                    if not os.path.exists(input_folder):
+                        self.log_message(f"❌ Input folder not found: {input_folder}", "folder")
+                        return
+                    
+                    supported_extensions = ('.mp3', '.mp4', '.m4a', '.wav', '.flac', '.ogg', '.webm', '.mkv')
+                    input_files = [f for f in os.listdir(input_folder) if f.lower().endswith(supported_extensions)]
+                    
+                    if not input_files:
+                        self.log_message(f"❌ No audio/video files found in {input_folder}", "folder")
+                        return
+                    
+                    total_files = len(input_files)
+                    self.log_message(f"📁 Found {total_files} files to process", "folder")
+                    
+                    folder_name = os.path.basename(input_folder)
+                    for idx, input_file in enumerate(input_files, 1):
+                        if not self.is_processing:
+                            self.log_message("🛑 Processing stopped by user.", "folder")
+                            break
+                        input_file_path = os.path.join(input_folder, input_file)
+                        base_name = os.path.splitext(input_file)[0]
+                        transcript_filename = f"{folder_name}_{base_name}.txt"
+                        self.log_message(f"🚀 Processing file {idx}/{total_files}: {input_file}...", "folder")
+                        
+                        clear_output_folder(output_dir)
+                        wav_file = convert_to_wav(input_file_path, output_dir)
+                        clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
+                        transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers=workers, use_threads=use_threads)
+                        transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
+                        self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {transcript_path}", "folder")
+                        
+                        if idx < total_files and rest_time > 0:
+                            self.log_message(f"⏳ Resting for {rest_time} seconds to avoid overheating...", "folder")
+                            time.sleep(rest_time)
+                        else:
+                            self.log_message("ℹ️ This is the last file, no rest needed.", "folder")
+                    
+                    if self.is_processing:
+                        self.log_message("🎉 All files processed!", "folder")
+                    
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "folder")
+                        return
+                
+                # Common steps for both single file and folder after transcription
+                transcript_dir = os.path.join(os.path.dirname(output_dir), 'transcripts')
                 if not os.path.exists(transcript_dir):
                     messagebox.showerror("Error", f"Transcript directory not found: {transcript_dir}")
                     return
@@ -640,9 +728,7 @@ class TranscriptionGUI:
                     messagebox.showerror("Error", f"No transcript files found in {transcript_dir}")
                     return
                 
-                self.log_message("🚀 Starting One-Click SRT Processing...", "both")
-                
-                # Step 1: Clean Transcripts
+                # Step 2: Clean Transcripts
                 self.log_message("🧹 Cleaning transcript files...", "both")
                 cleaned_segments_dict = {}
                 for idx, transcript_file in enumerate(transcript_files, 1):
@@ -674,7 +760,7 @@ class TranscriptionGUI:
                 if not self.is_processing:
                     return
                 
-                # Step 2: Convert to SRT
+                # Step 3: Convert to SRT
                 self.log_message(f"📝 Starting conversion of {len(transcript_files)} files to SRT format", "both")
                 for idx, transcript_file in enumerate(transcript_files, 1):
                     if not self.is_processing:
@@ -697,7 +783,7 @@ class TranscriptionGUI:
                 if not self.is_processing:
                     return
                 
-                # Step 3: Clean SRT Files
+                # Step 4: Clean SRT Files
                 srt_files = [f for f in os.listdir(transcript_dir) if f.endswith('.srt') and not f.startswith('cleaned_')]
                 if not srt_files:
                     self.log_message("❌ No SRT files found to clean", "both")
