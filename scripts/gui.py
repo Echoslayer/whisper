@@ -7,8 +7,10 @@ from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 import threading
 import queue
-from scripts.voice2transcripts import clear_output_folder, convert_to_wav, split_audio, transcribe_audio
-from scripts.time_stamp_cleaner import clean_transcription, save_cleaned_transcription, convert_to_srt
+# Adjust the path to import from the correct location
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+from voice2transcripts import clear_output_folder, convert_to_wav, split_audio, transcribe_audio
+from time_stamp_cleaner import clean_transcription, save_cleaned_transcription, convert_to_srt
 
 class TranscriptionGUI:
     def __init__(self, root):
