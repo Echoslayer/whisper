@@ -118,11 +118,18 @@ class TranscriptionGUI:
         ttk.Button(single_button_frame, text="Process Single File", command=self.process_single).pack(side='left', padx=5)
         ttk.Button(single_button_frame, text="Stop Processing", command=self.stop_processing).pack(side='left', padx=5)
         
-        # Scrollable Log Text Area for Single File
+        # Current Status Log Area for Single File (updates continuously)
+        single_status_frame = ttk.Frame(self.single_frame)
+        single_status_frame.grid(row=10, column=0, columnspan=3, padx=5, pady=5, sticky='ew')
+        ttk.Label(single_status_frame, text="Current Status:").pack(side='top', anchor='w')
+        self.single_status_text = tk.Text(single_status_frame, height=2, width=80, wrap=tk.WORD)
+        self.single_status_text.pack(side='left', fill='x', expand=True, padx=5, pady=5)
+        
+        # Historical Log Text Area for Single File (persists all logs)
         single_log_frame = ttk.Frame(self.single_frame)
-        single_log_frame.grid(row=10, column=0, columnspan=3, padx=5, pady=5, sticky='nsew')
-        ttk.Label(single_log_frame, text="Log Output:").pack(side='top', anchor='w')
-        self.single_log_text = tk.Text(single_log_frame, height=10, width=80, wrap=tk.WORD)
+        single_log_frame.grid(row=11, column=0, columnspan=3, padx=5, pady=5, sticky='nsew')
+        ttk.Label(single_log_frame, text="Historical Logs:").pack(side='top', anchor='w')
+        self.single_log_text = tk.Text(single_log_frame, height=8, width=80, wrap=tk.WORD)
         self.single_log_text.pack(side='left', fill='both', expand=True, padx=5, pady=5)
         single_scrollbar = ttk.Scrollbar(single_log_frame, orient='vertical', command=self.single_log_text.yview)
         single_scrollbar.pack(side='right', fill='y')
@@ -193,11 +200,18 @@ class TranscriptionGUI:
         ttk.Button(folder_button_frame, text="Process Folder", command=self.process_folder).pack(side='left', padx=5)
         ttk.Button(folder_button_frame, text="Stop Processing", command=self.stop_processing).pack(side='left', padx=5)
         
-        # Scrollable Log Text Area for Folder
+        # Current Status Log Area for Folder (updates continuously)
+        folder_status_frame = ttk.Frame(self.folder_frame)
+        folder_status_frame.grid(row=10, column=0, columnspan=3, padx=5, pady=5, sticky='ew')
+        ttk.Label(folder_status_frame, text="Current Status:").pack(side='top', anchor='w')
+        self.folder_status_text = tk.Text(folder_status_frame, height=2, width=80, wrap=tk.WORD)
+        self.folder_status_text.pack(side='left', fill='x', expand=True, padx=5, pady=5)
+        
+        # Historical Log Text Area for Folder (persists all logs)
         folder_log_frame = ttk.Frame(self.folder_frame)
-        folder_log_frame.grid(row=10, column=0, columnspan=3, padx=5, pady=5, sticky='nsew')
-        ttk.Label(folder_log_frame, text="Log Output:").pack(side='top', anchor='w')
-        self.folder_log_text = tk.Text(folder_log_frame, height=10, width=80, wrap=tk.WORD)
+        folder_log_frame.grid(row=11, column=0, columnspan=3, padx=5, pady=5, sticky='nsew')
+        ttk.Label(folder_log_frame, text="Historical Logs:").pack(side='top', anchor='w')
+        self.folder_log_text = tk.Text(folder_log_frame, height=8, width=80, wrap=tk.WORD)
         self.folder_log_text.pack(side='left', fill='both', expand=True, padx=5, pady=5)
         folder_scrollbar = ttk.Scrollbar(folder_log_frame, orient='vertical', command=self.folder_log_text.yview)
         folder_scrollbar.pack(side='right', fill='y')
@@ -205,7 +219,7 @@ class TranscriptionGUI:
         
         # Bottom Buttons for Cleaning and SRT Conversion
         bottom_frame = ttk.Frame(self.root)
-        bottom_frame.pack(pady=5, fill='x')
+        bottom_frame.pack(pady=5, fill='x', side='bottom')
         ttk.Button(bottom_frame, text="Clean Transcripts", command=self.clean_transcripts).pack(side='left', padx=5)
         ttk.Button(bottom_frame, text="Convert to SRT", command=self.convert_to_srt).pack(side='left', padx=5)
         ttk.Button(bottom_frame, text="Clean SRT Files", command=self.clean_srt_files).pack(side='left', padx=5)
@@ -214,9 +228,9 @@ class TranscriptionGUI:
         
         # Configure grid weights
         self.single_frame.grid_columnconfigure(1, weight=1)
-        self.single_frame.grid_rowconfigure(10, weight=1)
+        self.single_frame.grid_rowconfigure(11, weight=1)
         self.folder_frame.grid_columnconfigure(1, weight=1)
-        self.folder_frame.grid_rowconfigure(10, weight=1)
+        self.folder_frame.grid_rowconfigure(11, weight=1)
         
         # Check queue for updates
         self.root.after(100, self.check_queue)
@@ -302,13 +316,13 @@ class TranscriptionGUI:
             dots = "." * self.progress_counter + " " * (3 - self.progress_counter)
             animated_text = f"{self.progress_text}{dots}"
             if self.notebook.index(self.notebook.select()) == 0:  # Single File Tab
-                self.single_log_text.delete(1.0, tk.END)
-                self.single_log_text.insert(tk.END, animated_text + "\n")
-                self.single_log_text.see(tk.END)
+                self.single_status_text.delete(1.0, tk.END)
+                self.single_status_text.insert(tk.END, animated_text + "\n")
+                self.single_status_text.see(tk.END)
             else:  # Folder Tab
-                self.folder_log_text.delete(1.0, tk.END)
-                self.folder_log_text.insert(tk.END, animated_text + "\n")
-                self.folder_log_text.see(tk.END)
+                self.folder_status_text.delete(1.0, tk.END)
+                self.folder_status_text.insert(tk.END, animated_text + "\n")
+                self.folder_status_text.see(tk.END)
         self.root.after(500, self.update_progress_animation)
     
     def check_queue(self):
@@ -321,14 +335,29 @@ class TranscriptionGUI:
                     if target == "single":
                         self.single_log_text.insert(tk.END, message + "\n")
                         self.single_log_text.see(tk.END)
+                        if self.is_processing:
+                            self.single_status_text.delete(1.0, tk.END)
+                            self.single_status_text.insert(tk.END, message + "\n")
+                            self.single_status_text.see(tk.END)
                     elif target == "folder":
                         self.folder_log_text.insert(tk.END, message + "\n")
                         self.folder_log_text.see(tk.END)
+                        if self.is_processing:
+                            self.folder_status_text.delete(1.0, tk.END)
+                            self.folder_status_text.insert(tk.END, message + "\n")
+                            self.folder_status_text.see(tk.END)
                     else:
                         self.single_log_text.insert(tk.END, message + "\n")
                         self.single_log_text.see(tk.END)
                         self.folder_log_text.insert(tk.END, message + "\n")
                         self.folder_log_text.see(tk.END)
+                        if self.is_processing:
+                            self.single_status_text.delete(1.0, tk.END)
+                            self.single_status_text.insert(tk.END, message + "\n")
+                            self.single_status_text.see(tk.END)
+                            self.folder_status_text.delete(1.0, tk.END)
+                            self.folder_status_text.insert(tk.END, message + "\n")
+                            self.folder_status_text.see(tk.END)
         except queue.Empty:
             pass
         finally:
