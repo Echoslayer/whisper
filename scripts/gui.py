@@ -532,6 +532,10 @@ class TranscriptionGUI:
             ]
 
 if __name__ == "__main__":
+    # Ensure the script works regardless of the current working directory by resolving paths relative to the script's location
+    script_dir = os.path.abspath(os.path.dirname(__file__))
+    os.chdir(script_dir)  # Change working directory to the script's directory
+    
     root = tk.Tk()
     app = TranscriptionGUI(root)
     root.mainloop()
