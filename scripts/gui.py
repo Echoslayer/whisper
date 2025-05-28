@@ -38,6 +38,9 @@ class TranscriptionGUI:
         self.progress_text = ""
         self.progress_counter = 0
         
+        # Variable to store the current processing thread for interruption
+        self.current_thread = None
+        
         self.setup_ui()
         
     def setup_ui(self):
@@ -109,11 +112,21 @@ class TranscriptionGUI:
         self.use_threads_single.grid(row=8, column=1, padx=5, pady=5, sticky='w')
         self.use_threads_single.set("Multithreading" if self.DEFAULT_USE_THREADS else "Multiprocessing")
         
-        ttk.Button(self.single_frame, text="Process Single File", command=self.process_single).grid(row=9, column=0, columnspan=3, pady=10)
+        # Frame for process buttons in Single File Tab
+        single_button_frame = ttk.Frame(self.single_frame)
+        single_button_frame.grid(row=9, column=0, columnspan=3, pady=10)
+        ttk.Button(single_button_frame, text="Process Single File", command=self.process_single).pack(side='left', padx=5)
+        ttk.Button(single_button_frame, text="Stop Processing", command=self.stop_processing).pack(side='left', padx=5)
         
-        # Log Text for Single File
-        self.log_single = ttk.Label(self.single_frame, text="", wraplength=700)
-        self.log_single.grid(row=10, column=0, columnspan=3, padx=5, pady=5)
+        # Scrollable Log Text Area for Single File
+        single_log_frame = ttk.Frame(self.single_frame)
+        single_log_frame.grid(row=10, column=0, columnspan=3, padx=5, pady=5, sticky='nsew')
+        ttk.Label(single_log_frame, text="Log Output:").pack(side='top', anchor='w')
+        self.single_log_text = tk.Text(single_log_frame, height=10, width=80, wrap=tk.WORD)
+        self.single_log_text.pack(side='left', fill='both', expand=True, padx=5, pady=5)
+        single_scrollbar = ttk.Scrollbar(single_log_frame, orient='vertical', command=self.single_log_text.yview)
+        single_scrollbar.pack(side='right', fill='y')
+        self.single_log_text['yscrollcommand'] = single_scrollbar.set
         
         # Setup Folder Tab
         ttk.Label(self.folder_frame, text="Input Folder:").grid(row=0, column=0, padx=5, pady=5, sticky='w')
@@ -174,11 +187,21 @@ class TranscriptionGUI:
         self.rest_time_label.grid(row=8, column=2, padx=5, pady=5)
         self.rest_time.bind("<ButtonRelease-1>", self.update_rest_time_label)
         
-        ttk.Button(self.folder_frame, text="Process Folder", command=self.process_folder).grid(row=9, column=0, columnspan=3, pady=10)
+        # Frame for process buttons in Folder Tab
+        folder_button_frame = ttk.Frame(self.folder_frame)
+        folder_button_frame.grid(row=9, column=0, columnspan=3, pady=10)
+        ttk.Button(folder_button_frame, text="Process Folder", command=self.process_folder).pack(side='left', padx=5)
+        ttk.Button(folder_button_frame, text="Stop Processing", command=self.stop_processing).pack(side='left', padx=5)
         
-        # Log Text for Folder
-        self.log_folder = ttk.Label(self.folder_frame, text="", wraplength=700)
-        self.log_folder.grid(row=10, column=0, columnspan=3, padx=5, pady=5)
+        # Scrollable Log Text Area for Folder
+        folder_log_frame = ttk.Frame(self.folder_frame)
+        folder_log_frame.grid(row=10, column=0, columnspan=3, padx=5, pady=5, sticky='nsew')
+        ttk.Label(folder_log_frame, text="Log Output:").pack(side='top', anchor='w')
+        self.folder_log_text = tk.Text(folder_log_frame, height=10, width=80, wrap=tk.WORD)
+        self.folder_log_text.pack(side='left', fill='both', expand=True, padx=5, pady=5)
+        folder_scrollbar = ttk.Scrollbar(folder_log_frame, orient='vertical', command=self.folder_log_text.yview)
+        folder_scrollbar.pack(side='right', fill='y')
+        self.folder_log_text['yscrollcommand'] = folder_scrollbar.set
         
         # Bottom Buttons for Cleaning and SRT Conversion
         bottom_frame = ttk.Frame(self.root)
@@ -187,10 +210,13 @@ class TranscriptionGUI:
         ttk.Button(bottom_frame, text="Convert to SRT", command=self.convert_to_srt).pack(side='left', padx=5)
         ttk.Button(bottom_frame, text="Clean SRT Files", command=self.clean_srt_files).pack(side='left', padx=5)
         ttk.Button(bottom_frame, text="One-Click SRT (All Steps)", command=self.one_click_srt).pack(side='left', padx=5)
+        ttk.Button(bottom_frame, text="Stop Processing", command=self.stop_processing).pack(side='left', padx=5)
         
         # Configure grid weights
         self.single_frame.grid_columnconfigure(1, weight=1)
+        self.single_frame.grid_rowconfigure(10, weight=1)
         self.folder_frame.grid_columnconfigure(1, weight=1)
+        self.folder_frame.grid_rowconfigure(10, weight=1)
         
         # Check queue for updates
         self.root.after(100, self.check_queue)
@@ -276,9 +302,13 @@ class TranscriptionGUI:
             dots = "." * self.progress_counter + " " * (3 - self.progress_counter)
             animated_text = f"{self.progress_text}{dots}"
             if self.notebook.index(self.notebook.select()) == 0:  # Single File Tab
-                self.log_single.config(text=animated_text)
+                self.single_log_text.delete(1.0, tk.END)
+                self.single_log_text.insert(tk.END, animated_text + "\n")
+                self.single_log_text.see(tk.END)
             else:  # Folder Tab
-                self.log_folder.config(text=animated_text)
+                self.folder_log_text.delete(1.0, tk.END)
+                self.folder_log_text.insert(tk.END, animated_text + "\n")
+                self.folder_log_text.see(tk.END)
         self.root.after(500, self.update_progress_animation)
     
     def check_queue(self):
@@ -289,16 +319,30 @@ class TranscriptionGUI:
                 if action == "log":
                     message, target = args
                     if target == "single":
-                        self.log_single.config(text=message)
+                        self.single_log_text.insert(tk.END, message + "\n")
+                        self.single_log_text.see(tk.END)
                     elif target == "folder":
-                        self.log_folder.config(text=message)
+                        self.folder_log_text.insert(tk.END, message + "\n")
+                        self.folder_log_text.see(tk.END)
                     else:
-                        self.log_single.config(text=message)
-                        self.log_folder.config(text=message)
+                        self.single_log_text.insert(tk.END, message + "\n")
+                        self.single_log_text.see(tk.END)
+                        self.folder_log_text.insert(tk.END, message + "\n")
+                        self.folder_log_text.see(tk.END)
         except queue.Empty:
             pass
         finally:
             self.root.after(100, self.check_queue)
+    
+    def stop_processing(self):
+        """Attempt to stop the current processing thread."""
+        if self.is_processing:
+            self.is_processing = False
+            self.log_message("🛑 Processing interrupted by user.", "both")
+            # Note: Actual thread termination is complex in Python. For simplicity, we just set a flag.
+            # In a real-world scenario, you'd need to implement a more robust interruption mechanism.
+        else:
+            self.log_message("ℹ️ No active processing to stop.", "both")
     
     def process_single(self):
         def run():
@@ -335,7 +379,8 @@ class TranscriptionGUI:
             except Exception as e:
                 self.log_message(f"❌ Error during processing: {e}", "single")
         
-        threading.Thread(target=run, daemon=True).start()
+        self.current_thread = threading.Thread(target=run, daemon=True)
+        self.current_thread.start()
     
     def process_folder(self):
         def run():
@@ -366,6 +411,9 @@ class TranscriptionGUI:
                 
                 folder_name = os.path.basename(input_folder)
                 for idx, input_file in enumerate(input_files, 1):
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "folder")
+                        break
                     input_file_path = os.path.join(input_folder, input_file)
                     base_name = os.path.splitext(input_file)[0]
                     transcript_filename = f"{folder_name}_{base_name}.txt"
@@ -384,11 +432,13 @@ class TranscriptionGUI:
                     else:
                         self.log_message("ℹ️ This is the last file, no rest needed.", "folder")
                 
-                self.log_message("🎉 All files processed!", "folder")
+                if self.is_processing:
+                    self.log_message("🎉 All files processed!", "folder")
             except Exception as e:
                 self.log_message(f"❌ Error during folder processing: {e}", "folder")
         
-        threading.Thread(target=run, daemon=True).start()
+        self.current_thread = threading.Thread(target=run, daemon=True)
+        self.current_thread.start()
     
     def clean_transcripts(self):
         def run():
@@ -410,6 +460,9 @@ class TranscriptionGUI:
                 cleaned_segments_dict = {}
                 
                 for idx, transcript_file in enumerate(transcript_files, 1):
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "both")
+                        break
                     transcript_path = os.path.join(transcript_dir, transcript_file)
                     cleaned_filename = f"clean_{transcript_file}"
                     cleaned_transcript_path = os.path.join(transcript_dir, cleaned_filename)
@@ -428,13 +481,15 @@ class TranscriptionGUI:
                     else:
                         self.log_message(f"❌ Transcript file not found: {transcript_path}", "both")
                 
-                self.log_message("🎉 All transcript files cleaned!", "both")
+                if self.is_processing:
+                    self.log_message("🎉 All transcript files cleaned!", "both")
                 self.cleaned_segments_dict = cleaned_segments_dict
             except Exception as e:
                 messagebox.showerror("Error", f"Error during transcript cleaning: {e}")
                 self.log_message(f"❌ Error during transcript cleaning: {e}", "both")
         
-        threading.Thread(target=run, daemon=True).start()
+        self.current_thread = threading.Thread(target=run, daemon=True)
+        self.current_thread.start()
     
     def convert_to_srt(self):
         def run():
@@ -459,6 +514,9 @@ class TranscriptionGUI:
                 self.log_message(f"📝 Starting conversion of {len(transcript_files)} files to SRT format", "both")
                 
                 for idx, transcript_file in enumerate(transcript_files, 1):
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "both")
+                        break
                     srt_filename = f"{os.path.splitext(transcript_file)[0]}.srt"
                     srt_path = os.path.join(transcript_dir, srt_filename)
                     
@@ -470,12 +528,14 @@ class TranscriptionGUI:
                     else:
                         self.log_message(f"⚠️ No valid cleaned content found for {transcript_file}", "both")
                 
-                self.log_message("🎉 All transcript files converted to SRT format!", "both")
+                if self.is_processing:
+                    self.log_message("🎉 All transcript files converted to SRT format!", "both")
             except Exception as e:
                 messagebox.showerror("Error", f"Error during SRT conversion: {e}")
                 self.log_message(f"❌ Error during SRT conversion: {e}", "both")
         
-        threading.Thread(target=run, daemon=True).start()
+        self.current_thread = threading.Thread(target=run, daemon=True)
+        self.current_thread.start()
     
     def clean_srt_files(self):
         def run():
@@ -497,6 +557,9 @@ class TranscriptionGUI:
                 self.log_message(f"📝 Found {len(srt_files)} SRT files to clean", "both")
                 
                 for idx, srt_file in enumerate(srt_files, 1):
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "both")
+                        break
                     srt_path = os.path.join(transcript_dir, srt_file)
                     self.log_message(f"Cleaning SRT file {idx}/{len(srt_files)}: {srt_file}...", "both")
                     output_path = os.path.join(transcript_dir, f"cleaned_{srt_file}")
@@ -523,12 +586,14 @@ class TranscriptionGUI:
                         
                         self.log_message(f"🧹 Cleaned {srt_file}! Removed {removed_count} entries", "both")
                 
-                self.log_message("🎉 All SRT files cleaned!", "both")
+                if self.is_processing:
+                    self.log_message("🎉 All SRT files cleaned!", "both")
             except Exception as e:
                 messagebox.showerror("Error", f"Error during SRT cleaning: {e}")
                 self.log_message(f"❌ Error during SRT cleaning: {e}", "both")
         
-        threading.Thread(target=run, daemon=True).start()
+        self.current_thread = threading.Thread(target=run, daemon=True)
+        self.current_thread.start()
     
     def one_click_srt(self):
         def run():
@@ -552,6 +617,9 @@ class TranscriptionGUI:
                 self.log_message("🧹 Cleaning transcript files...", "both")
                 cleaned_segments_dict = {}
                 for idx, transcript_file in enumerate(transcript_files, 1):
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "both")
+                        break
                     transcript_path = os.path.join(transcript_dir, transcript_file)
                     cleaned_filename = f"clean_{transcript_file}"
                     cleaned_transcript_path = os.path.join(transcript_dir, cleaned_filename)
@@ -571,11 +639,18 @@ class TranscriptionGUI:
                         self.log_message(f"❌ Transcript file not found: {transcript_path}", "both")
                 
                 self.cleaned_segments_dict = cleaned_segments_dict
-                self.log_message("🎉 All transcript files cleaned!", "both")
+                if self.is_processing:
+                    self.log_message("🎉 All transcript files cleaned!", "both")
+                
+                if not self.is_processing:
+                    return
                 
                 # Step 2: Convert to SRT
                 self.log_message(f"📝 Starting conversion of {len(transcript_files)} files to SRT format", "both")
                 for idx, transcript_file in enumerate(transcript_files, 1):
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "both")
+                        break
                     srt_filename = f"{os.path.splitext(transcript_file)[0]}.srt"
                     srt_path = os.path.join(transcript_dir, srt_filename)
                     
@@ -587,7 +662,11 @@ class TranscriptionGUI:
                     else:
                         self.log_message(f"⚠️ No valid cleaned content found for {transcript_file}", "both")
                 
-                self.log_message("🎉 All transcript files converted to SRT format!", "both")
+                if self.is_processing:
+                    self.log_message("🎉 All transcript files converted to SRT format!", "both")
+                
+                if not self.is_processing:
+                    return
                 
                 # Step 3: Clean SRT Files
                 srt_files = [f for f in os.listdir(transcript_dir) if f.endswith('.srt') and not f.startswith('cleaned_')]
@@ -599,6 +678,9 @@ class TranscriptionGUI:
                 self.log_message(f"📝 Found {len(srt_files)} SRT files to clean", "both")
                 
                 for idx, srt_file in enumerate(srt_files, 1):
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "both")
+                        break
                     srt_path = os.path.join(transcript_dir, srt_file)
                     self.log_message(f"Cleaning SRT file {idx}/{len(srt_files)}: {srt_file}...", "both")
                     output_path = os.path.join(transcript_dir, f"cleaned_{srt_file}")
@@ -625,12 +707,14 @@ class TranscriptionGUI:
                         
                         self.log_message(f"🧹 Cleaned {srt_file}! Removed {removed_count} entries", "both")
                 
-                self.log_message("🎉 All SRT files cleaned! One-Click SRT Processing Complete!", "both")
+                if self.is_processing:
+                    self.log_message("🎉 All SRT files cleaned! One-Click SRT Processing Complete!", "both")
             except Exception as e:
                 messagebox.showerror("Error", f"Error during One-Click SRT processing: {e}")
                 self.log_message(f"❌ Error during One-Click SRT processing: {e}", "both")
         
-        threading.Thread(target=run, daemon=True).start()
+        self.current_thread = threading.Thread(target=run, daemon=True)
+        self.current_thread.start()
     
     def load_hallucinations(self, hallucinations_file="../doc/whisper_hallucinations.txt"):
         """Load hallucinated phrases from a file for filtering SRT content."""
