@@ -107,7 +107,7 @@ class TranscriptionGUI:
         ttk.Button(self.single_frame, text="Process Single File", command=self.process_single).grid(row=9, column=0, columnspan=3, pady=10)
         
         # Log Text for Single File
-        self.log_single = ttk.Label(self.single_frame, text=\"\", wraplength=700)
+        self.log_single = ttk.Label(self.single_frame, text="", wraplength=700)
         self.log_single.grid(row=10, column=0, columnspan=3, padx=5, pady=5)
         
         # Setup Folder Tab
@@ -172,7 +172,7 @@ class TranscriptionGUI:
         ttk.Button(self.folder_frame, text="Process Folder", command=self.process_folder).grid(row=9, column=0, columnspan=3, pady=10)
         
         # Log Text for Folder
-        self.log_folder = ttk.Label(self.folder_frame, text=\"\", wraplength=700)
+        self.log_folder = ttk.Label(self.folder_frame, text="", wraplength=700)
         self.log_folder.grid(row=10, column=0, columnspan=3, padx=5, pady=5)
         
         # Bottom Buttons for Cleaning and SRT Conversion
