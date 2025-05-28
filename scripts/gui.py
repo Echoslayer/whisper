@@ -33,6 +33,11 @@ class TranscriptionGUI:
         self.DEFAULT_USE_THREADS = False
         self.DEFAULT_REST_TIME = 180  # in seconds, default rest time between transcriptions
         
+        # State variables for progress animation
+        self.is_processing = False
+        self.progress_text = ""
+        self.progress_counter = 0
+        
         self.setup_ui()
         
     def setup_ui(self):
@@ -181,6 +186,7 @@ class TranscriptionGUI:
         ttk.Button(bottom_frame, text="Clean Transcripts", command=self.clean_transcripts).pack(side='left', padx=5)
         ttk.Button(bottom_frame, text="Convert to SRT", command=self.convert_to_srt).pack(side='left', padx=5)
         ttk.Button(bottom_frame, text="Clean SRT Files", command=self.clean_srt_files).pack(side='left', padx=5)
+        ttk.Button(bottom_frame, text="One-Click SRT (All Steps)", command=self.one_click_srt).pack(side='left', padx=5)
         
         # Configure grid weights
         self.single_frame.grid_columnconfigure(1, weight=1)
@@ -188,6 +194,7 @@ class TranscriptionGUI:
         
         # Check queue for updates
         self.root.after(100, self.check_queue)
+        self.root.after(500, self.update_progress_animation)
     
     def update_clip_duration_sec_label(self, event=None):
         self.clip_duration_sec_label.config(text=str(int(self.clip_duration_sec.get())))
@@ -255,6 +262,24 @@ class TranscriptionGUI:
     def log_message(self, message, target=None):
         """Add message to the queue for thread-safe GUI update."""
         self.queue.put(("log", message, target))
+        if "Starting" in message or "Processing" in message:
+            self.is_processing = True
+            self.progress_text = message
+        elif "completed" in message.lower() or "all files processed" in message.lower() or "error" in message.lower():
+            self.is_processing = False
+            self.progress_text = ""
+    
+    def update_progress_animation(self):
+        """Update the progress animation text if a process is running."""
+        if self.is_processing:
+            self.progress_counter = (self.progress_counter + 1) % 4
+            dots = "." * self.progress_counter + " " * (3 - self.progress_counter)
+            animated_text = f"{self.progress_text}{dots}"
+            if self.notebook.index(self.notebook.select()) == 0:  # Single File Tab
+                self.log_single.config(text=animated_text)
+            else:  # Folder Tab
+                self.log_folder.config(text=animated_text)
+        self.root.after(500, self.update_progress_animation)
     
     def check_queue(self):
         """Check the queue for new messages and update GUI."""
@@ -502,6 +527,108 @@ class TranscriptionGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Error during SRT cleaning: {e}")
                 self.log_message(f"❌ Error during SRT cleaning: {e}", "both")
+        
+        threading.Thread(target=run, daemon=True).start()
+    
+    def one_click_srt(self):
+        def run():
+            try:
+                output_dir = self.output_dir_single_entry.get() if self.notebook.index(self.notebook.select()) == 0 else self.output_dir_folder_entry.get()
+                transcript_dir = os.path.join(os.path.dirname(output_dir), 'transcripts')
+                
+                if not os.path.exists(transcript_dir):
+                    messagebox.showerror("Error", f"Transcript directory not found: {transcript_dir}")
+                    return
+                
+                transcript_files = [f for f in os.listdir(transcript_dir) if f.endswith('.txt') and not f.startswith('clean_')]
+                
+                if not transcript_files:
+                    messagebox.showerror("Error", f"No transcript files found in {transcript_dir}")
+                    return
+                
+                self.log_message("🚀 Starting One-Click SRT Processing...", "both")
+                
+                # Step 1: Clean Transcripts
+                self.log_message("🧹 Cleaning transcript files...", "both")
+                cleaned_segments_dict = {}
+                for idx, transcript_file in enumerate(transcript_files, 1):
+                    transcript_path = os.path.join(transcript_dir, transcript_file)
+                    cleaned_filename = f"clean_{transcript_file}"
+                    cleaned_transcript_path = os.path.join(transcript_dir, cleaned_filename)
+                    
+                    self.log_message(f"Cleaning file {idx}/{len(transcript_files)}: {transcript_file}...", "both")
+                    if os.path.exists(transcript_path):
+                        with open(transcript_path, 'r', encoding='utf-8') as f:
+                            text = f.read()
+                        cleaned_segments = clean_transcription(text)
+                        cleaned_segments_dict[transcript_file] = cleaned_segments
+                        if cleaned_segments:
+                            save_cleaned_transcription(cleaned_segments, cleaned_transcript_path)
+                            self.log_message(f"✅ Cleaning completed! Cleaned transcript saved to {cleaned_transcript_path}", "both")
+                        else:
+                            self.log_message(f"⚠️ No valid transcript content found for {transcript_file}", "both")
+                    else:
+                        self.log_message(f"❌ Transcript file not found: {transcript_path}", "both")
+                
+                self.cleaned_segments_dict = cleaned_segments_dict
+                self.log_message("🎉 All transcript files cleaned!", "both")
+                
+                # Step 2: Convert to SRT
+                self.log_message(f"📝 Starting conversion of {len(transcript_files)} files to SRT format", "both")
+                for idx, transcript_file in enumerate(transcript_files, 1):
+                    srt_filename = f"{os.path.splitext(transcript_file)[0]}.srt"
+                    srt_path = os.path.join(transcript_dir, srt_filename)
+                    
+                    self.log_message(f"Converting file {idx}/{len(transcript_files)}: {transcript_file}...", "both")
+                    cleaned_segments = self.cleaned_segments_dict.get(transcript_file, [])
+                    if cleaned_segments:
+                        convert_to_srt(cleaned_segments, srt_path)
+                        self.log_message(f"✅ Conversion completed! SRT file saved to {srt_path}", "both")
+                    else:
+                        self.log_message(f"⚠️ No valid cleaned content found for {transcript_file}", "both")
+                
+                self.log_message("🎉 All transcript files converted to SRT format!", "both")
+                
+                # Step 3: Clean SRT Files
+                srt_files = [f for f in os.listdir(transcript_dir) if f.endswith('.srt') and not f.startswith('cleaned_')]
+                if not srt_files:
+                    self.log_message("❌ No SRT files found to clean", "both")
+                    return
+                
+                blacklisted_phrases = self.load_hallucinations()
+                self.log_message(f"📝 Found {len(srt_files)} SRT files to clean", "both")
+                
+                for idx, srt_file in enumerate(srt_files, 1):
+                    srt_path = os.path.join(transcript_dir, srt_file)
+                    self.log_message(f"Cleaning SRT file {idx}/{len(srt_files)}: {srt_file}...", "both")
+                    output_path = os.path.join(transcript_dir, f"cleaned_{srt_file}")
+                    
+                    if os.path.exists(srt_path):
+                        with open(srt_path, 'r', encoding='utf-8') as f:
+                            srt_content = f.read()
+                        
+                        entries = srt_content.split("\n\n")
+                        cleaned_entries = []
+                        removed_count = 0
+                        
+                        for entry in entries:
+                            lines = entry.split("\n")
+                            if len(lines) >= 3:
+                                subtitle_text = " ".join(lines[2:])
+                                if any(phrase in subtitle_text for phrase in blacklisted_phrases):
+                                    removed_count += 1
+                                    continue
+                                cleaned_entries.append(entry)
+                        
+                        with open(output_path, 'w', encoding='utf-8') as f:
+                            f.write("\n\n".join(cleaned_entries))
+                        
+                        self.log_message(f"🧹 Cleaned {srt_file}! Removed {removed_count} entries", "both")
+                
+                self.log_message("🎉 All SRT files cleaned! One-Click SRT Processing Complete!", "both")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error during One-Click SRT processing: {e}")
+                self.log_message(f"❌ Error during One-Click SRT processing: {e}", "both")
         
         threading.Thread(target=run, daemon=True).start()
     
