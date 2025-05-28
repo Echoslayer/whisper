@@ -306,7 +306,7 @@ class TranscriptionGUI:
         if "Starting" in message or "Processing" in message:
             self.is_processing = True
             self.progress_text = message
-        elif "completed" in message.lower() or "all files processed" in message.lower() or "error" in message.lower():
+        elif any(phrase in message.lower() for phrase in ["completed", "all files processed", "error", "stopped by user"]):
             self.is_processing = False
             self.progress_text = ""
     
@@ -336,29 +336,26 @@ class TranscriptionGUI:
                     if target == "single":
                         self.single_log_text.insert(tk.END, message + "\n")
                         self.single_log_text.see(tk.END)
-                        if self.is_processing:
-                            self.single_status_text.delete(1.0, tk.END)
-                            self.single_status_text.insert(tk.END, message + "\n")
-                            self.single_status_text.see(tk.END)
+                        self.single_status_text.delete(1.0, tk.END)
+                        self.single_status_text.insert(tk.END, message + "\n")
+                        self.single_status_text.see(tk.END)
                     elif target == "folder":
                         self.folder_log_text.insert(tk.END, message + "\n")
                         self.folder_log_text.see(tk.END)
-                        if self.is_processing:
-                            self.folder_status_text.delete(1.0, tk.END)
-                            self.folder_status_text.insert(tk.END, message + "\n")
-                            self.folder_status_text.see(tk.END)
+                        self.folder_status_text.delete(1.0, tk.END)
+                        self.folder_status_text.insert(tk.END, message + "\n")
+                        self.folder_status_text.see(tk.END)
                     else:
                         self.single_log_text.insert(tk.END, message + "\n")
                         self.single_log_text.see(tk.END)
                         self.folder_log_text.insert(tk.END, message + "\n")
                         self.folder_log_text.see(tk.END)
-                        if self.is_processing:
-                            self.single_status_text.delete(1.0, tk.END)
-                            self.single_status_text.insert(tk.END, message + "\n")
-                            self.single_status_text.see(tk.END)
-                            self.folder_status_text.delete(1.0, tk.END)
-                            self.folder_status_text.insert(tk.END, message + "\n")
-                            self.folder_status_text.see(tk.END)
+                        self.single_status_text.delete(1.0, tk.END)
+                        self.single_status_text.insert(tk.END, message + "\n")
+                        self.single_status_text.see(tk.END)
+                        self.folder_status_text.delete(1.0, tk.END)
+                        self.folder_status_text.insert(tk.END, message + "\n")
+                        self.folder_status_text.see(tk.END)
         except queue.Empty:
             pass
         finally:
@@ -398,12 +395,24 @@ class TranscriptionGUI:
                 # Clear old files
                 clear_output_folder(output_dir)
                 
+                if not self.is_processing:
+                    self.log_message("🛑 Processing stopped by user.", "single")
+                    return
+                
                 # Process audio
                 wav_file = convert_to_wav(input_file, output_dir)
                 self.log_message("🔄 Audio converted to WAV format", "single")
                 
+                if not self.is_processing:
+                    self.log_message("🛑 Processing stopped by user.", "single")
+                    return
+                
                 clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
                 self.log_message(f"✅ Audio split into {len(clip_files)} clips", "single")
+                
+                if not self.is_processing:
+                    self.log_message("🛑 Processing stopped by user.", "single")
+                    return
                 
                 transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename=transcript_filename, workers=workers, use_threads=use_threads)
                 transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
@@ -411,6 +420,7 @@ class TranscriptionGUI:
             except Exception as e:
                 self.log_message(f"❌ Error during processing: {e}", "single")
             finally:
+                self.is_processing = False
                 self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
@@ -454,8 +464,23 @@ class TranscriptionGUI:
                     self.log_message(f"🚀 Processing file {idx}/{total_files}: {input_file}...", "folder")
                     
                     clear_output_folder(output_dir)
+                    
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "folder")
+                        break
+                    
                     wav_file = convert_to_wav(input_file_path, output_dir)
+                    
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "folder")
+                        break
+                    
                     clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
+                    
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "folder")
+                        break
+                    
                     transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers=workers, use_threads=use_threads)
                     transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
                     self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {transcript_path}", "folder")
@@ -471,6 +496,7 @@ class TranscriptionGUI:
             except Exception as e:
                 self.log_message(f"❌ Error during folder processing: {e}", "folder")
             finally:
+                self.is_processing = False
                 self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
@@ -524,6 +550,7 @@ class TranscriptionGUI:
                 messagebox.showerror("Error", f"Error during transcript cleaning: {e}")
                 self.log_message(f"❌ Error during transcript cleaning: {e}", "both")
             finally:
+                self.is_processing = False
                 self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
@@ -572,6 +599,7 @@ class TranscriptionGUI:
                 messagebox.showerror("Error", f"Error during SRT conversion: {e}")
                 self.log_message(f"❌ Error during SRT conversion: {e}", "both")
             finally:
+                self.is_processing = False
                 self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
@@ -632,6 +660,7 @@ class TranscriptionGUI:
                 messagebox.showerror("Error", f"Error during SRT cleaning: {e}")
                 self.log_message(f"❌ Error during SRT cleaning: {e}", "both")
             finally:
+                self.is_processing = False
                 self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
@@ -662,10 +691,25 @@ class TranscriptionGUI:
                     # Step 1: Process the audio file (transcription)
                     self.log_message("🚀 Starting audio processing...", "single")
                     clear_output_folder(output_dir)
+                    
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "single")
+                        return
+                    
                     wav_file = convert_to_wav(input_source, output_dir)
                     self.log_message("🔄 Audio converted to WAV format", "single")
+                    
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "single")
+                        return
+                    
                     clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
                     self.log_message(f"✅ Audio split into {len(clip_files)} clips", "single")
+                    
+                    if not self.is_processing:
+                        self.log_message("🛑 Processing stopped by user.", "single")
+                        return
+                    
                     transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename=transcript_filename, workers=workers, use_threads=use_threads)
                     transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
                     self.log_message(f"🎉 Transcription completed! Saved to {transcript_path}", "single")
@@ -710,8 +754,23 @@ class TranscriptionGUI:
                         self.log_message(f"🚀 Processing file {idx}/{total_files}: {input_file}...", "folder")
                         
                         clear_output_folder(output_dir)
+                        
+                        if not self.is_processing:
+                            self.log_message("🛑 Processing stopped by user.", "folder")
+                            break
+                        
                         wav_file = convert_to_wav(input_file_path, output_dir)
+                        
+                        if not self.is_processing:
+                            self.log_message("🛑 Processing stopped by user.", "folder")
+                            break
+                        
                         clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
+                        
+                        if not self.is_processing:
+                            self.log_message("🛑 Processing stopped by user.", "folder")
+                            break
+                        
                         transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers=workers, use_threads=use_threads)
                         transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
                         self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {transcript_path}", "folder")
@@ -841,6 +900,7 @@ class TranscriptionGUI:
                 messagebox.showerror("Error", f"Error during One-Click SRT processing: {e}")
                 self.log_message(f"❌ Error during One-Click SRT processing: {e}", "both")
             finally:
+                self.is_processing = False
                 self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
