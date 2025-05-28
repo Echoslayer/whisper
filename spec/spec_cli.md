@@ -99,3 +99,29 @@ print(response)
 /ask 我是能讓scripts/voice2transcripts.py用多線程或多進程運行的嗎？
 ---
 能讓scripts/voice2transcripts.py用多線程或多進程運行的嗎？我主要是想要加速 notebooks/gen_transcript.ipynb 的運行，因為現在太多音檔了，可能IO花太多時間了，如果用到進程請設定worker為參數，預設２，請考慮翻譯順序，因為逐字稿是有時間前後的
+---
+更新 notebooks/gen_folder_transcripts.ipynb, 透過參考更新後的 notebooks/gen_transcript.ipynb
+---
+添加一個參數可以讓 notebooks/gen_folder_transcripts.ipynb 在兩個音檔轉錄的時間有休息，預設 180 秒，以避免機器過熱
+---
+請在 notebooks/gen_folder_transcripts.ipynb 添加 進度條（以及音訊文件目前翻譯的百分比）以動態顯示當前所翻譯出來的句子，且依然保留錯誤訊息不要刪除
+---
+更新 notebooks/gen_folder_transcripts.ipynb，如果冷卻邏輯（休息）在之後沒有需要轉錄的就不用休息（目前會無條件休息
+--- 
+透過分析 doc/temp_black.srt，因為whisper 在轉錄時如果聲音過小或是沒有聲音，常常會出現幻聽，請你建立一個文件在 doc/ 中，儲存可能的幻聽句子
+如：
+(字幕君:我看不懂,我看不懂)
+(字幕製作:貝爾)
+(字幕君:你真是個傻瓜)
+---
+請修改 doc/whisper_hallucinations.txt 為一個格式化文件，裡頭包含確切幻覺的句子，並且分析病建立 regular expression 的幻覺句子邏輯，請注意讓其易由外部讀入，並在notebooks/gen_transcript.ipynb添加一個 code cell 是將 srt 字幕清理，去除一些黑名單的字串
+---
+參考 notebooks/gen_transcript.ipynb 製作一個 scripts/gui.py 與 notebooks/gui.ipynb, notebooks/gui.ipynb 僅用來呼叫 scripts/gui.py 以及儲存相關超參數
+---
+不是，我想要的 gui 是一個真實的 gui, 包含 ui 介面
+--- 
+在 scripts/gui.py 中加入更好的 ux 邏輯：尚未運行完請有一個在動的運行中 ... 或是進度條，另外，請加入一個一鍵完成 srt 的按鈕
+--- 
+添加一個中斷按鈕以及一個合適的區域顯示 log 
+---
+目前的 log 區域會刷掉過去 log, 我要一個區域是過去 log. 一個是現在一直更新的 log, 且注意不要讓底下的按鈕被吃掉
