@@ -37,6 +37,7 @@ class TranscriptionGUI:
         self.is_processing = False
         self.progress_text = ""
         self.progress_counter = 0
+        self.stop_requested = False
         
         # Variable to store the current processing thread for interruption
         self.current_thread = None
@@ -365,13 +366,15 @@ class TranscriptionGUI:
     
     def stop_processing(self):
         """Attempt to stop the current processing thread."""
-        if self.is_processing:
+        if self.is_processing and not self.stop_requested:
             self.is_processing = False
+            self.stop_requested = True
             self.log_message("🛑 Processing interrupted by user.", "both")
             # Note: Actual thread termination is complex in Python. For simplicity, we just set a flag.
             # In a real-world scenario, you'd need to implement a more robust interruption mechanism.
         else:
-            self.log_message("ℹ️ No active processing to stop.", "both")
+            if not self.stop_requested:
+                self.log_message("ℹ️ No active processing to stop.", "both")
     
     def process_single(self):
         def run():
@@ -407,6 +410,8 @@ class TranscriptionGUI:
                 self.log_message(f"🎉 Transcription completed! Saved to {transcript_path}", "single")
             except Exception as e:
                 self.log_message(f"❌ Error during processing: {e}", "single")
+            finally:
+                self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
@@ -465,6 +470,8 @@ class TranscriptionGUI:
                     self.log_message("🎉 All files processed!", "folder")
             except Exception as e:
                 self.log_message(f"❌ Error during folder processing: {e}", "folder")
+            finally:
+                self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
@@ -516,6 +523,8 @@ class TranscriptionGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Error during transcript cleaning: {e}")
                 self.log_message(f"❌ Error during transcript cleaning: {e}", "both")
+            finally:
+                self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
@@ -562,6 +571,8 @@ class TranscriptionGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Error during SRT conversion: {e}")
                 self.log_message(f"❌ Error during SRT conversion: {e}", "both")
+            finally:
+                self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
@@ -620,6 +631,8 @@ class TranscriptionGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Error during SRT cleaning: {e}")
                 self.log_message(f"❌ Error during SRT cleaning: {e}", "both")
+            finally:
+                self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
@@ -827,6 +840,8 @@ class TranscriptionGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Error during One-Click SRT processing: {e}")
                 self.log_message(f"❌ Error during One-Click SRT processing: {e}", "both")
+            finally:
+                self.stop_requested = False
         
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
