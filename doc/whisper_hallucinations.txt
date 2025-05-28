@@ -1,0 +1,14 @@
+# Whisper Hallucinations
+
+This file contains a list of possible hallucinated sentences or phrases that Whisper might generate when the audio input is too quiet or contains no sound. These are often repetitive or nonsensical phrases that can be used to filter out invalid transcriptions.
+
+- (字幕君:我看不懂,我看不懂)
+- (字幕製作:貝爾)
+- (字幕君:你真是個傻瓜)
+- (字幕君:我聽不懂,我聽不懂)
+- (字幕君:這是什麼意思)
+- (字幕君:聽不清楚)
+- (字幕君:我不知道你在說什麼)
+- (字幕製作:未知)
+- (字幕君:這是幻聽嗎)
+- (字幕君:我無法理解)
