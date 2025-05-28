@@ -1,6 +1,10 @@
 # Whisper Hallucinations
 
-This file contains a list of possible hallucinated sentences or phrases that Whisper might generate when the audio input is too quiet or contains no sound. These are often repetitive or nonsensical phrases that can be used to filter out invalid transcriptions.
+This document lists specific hallucinated sentences or phrases that Whisper might generate when the audio input is too quiet or contains no sound. These are often repetitive or nonsensical phrases that can be used to filter out invalid transcriptions. The file is structured for easy parsing by external scripts or tools.
+
+## Hallucinated Sentences
+
+Below is a list of exact hallucinated sentences or phrases observed in Whisper transcriptions:
 
 - (字幕君:我看不懂,我看不懂)
 - (字幕製作:貝爾)
@@ -12,3 +16,21 @@ This file contains a list of possible hallucinated sentences or phrases that Whi
 - (字幕製作:未知)
 - (字幕君:這是幻聽嗎)
 - (字幕君:我無法理解)
+
+## Regular Expression Pattern for Hallucination Detection
+
+Many hallucinated sentences follow a specific pattern, often starting with identifiers like "字幕君" or "字幕製作" followed by a colon and a repetitive or nonsensical message. Below is a regular expression (regex) pattern designed to detect such hallucinations:
+
+- Pattern: `\\(字幕君:.*\\)|\\(字幕製作:.*\\)`
+- Explanation:
+  - `\\(` and `\\)` match literal parentheses.
+  - `字幕君` or `字幕製作` are common prefixes in hallucinated text.
+  - `:` matches the colon that typically follows the prefix.
+  - `.*` matches any characters (including none) after the colon until the closing parenthesis.
+  - `|` acts as an OR operator to match either prefix.
+
+This regex can be used in scripts to filter out hallucinated content from transcriptions. It is recommended to test and refine this pattern based on additional observed hallucinations.
+
+## Usage
+
+This file can be read by scripts to load the list of hallucinated sentences or the regex pattern for filtering purposes. For example, in Python, you can parse this file to extract the sentences or regex for cleaning transcriptions or SRT files.
