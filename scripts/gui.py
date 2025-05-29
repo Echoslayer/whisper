@@ -366,6 +366,7 @@ class TranscriptionGUI:
     def stop_processing(self):
         """Attempt to stop the current processing thread."""
         if self.is_processing and not self.stop_requested:
+            self.is_processing = False
             self.stop_requested = True
             self.log_message("🛑 Processing interrupted by user.", "both")
             # Note: Actual thread termination is complex in Python. For simplicity, we just set a flag.
