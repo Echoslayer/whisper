@@ -466,24 +466,28 @@ class TranscriptionGUI:
                     transcript_filename = f"{folder_name}_{base_name}.txt"
                     self.log_message(f"🚀 Processing file {idx}/{total_files}: {input_file}...", "folder")
                     
+                    # Step 1: Clear output folder
                     clear_output_folder(output_dir)
                     
                     if not self.is_processing:
                         self.log_message("🛑 Processing stopped by user.", "folder")
                         break
                     
+                    # Step 2: Convert to WAV
                     wav_file = convert_to_wav(input_file_path, output_dir)
                     
                     if not self.is_processing:
                         self.log_message("🛑 Processing stopped by user.", "folder")
                         break
                     
+                    # Step 3: Split audio
                     clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
                     
                     if not self.is_processing:
                         self.log_message("🛑 Processing stopped by user.", "folder")
                         break
                     
+                    # Step 4: Transcribe audio (ensure this completes before moving to the next file)
                     transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers=workers, use_threads=use_threads)
                     transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
                     self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {transcript_path}", "folder")
