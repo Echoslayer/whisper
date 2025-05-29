@@ -366,7 +366,6 @@ class TranscriptionGUI:
     def stop_processing(self):
         """Attempt to stop the current processing thread."""
         if self.is_processing and not self.stop_requested:
-            self.is_processing = False
             self.stop_requested = True
             self.log_message("🛑 Processing interrupted by user.", "both")
             # Note: Actual thread termination is complex in Python. For simplicity, we just set a flag.
@@ -397,7 +396,7 @@ class TranscriptionGUI:
                 # Clear old files
                 clear_output_folder(output_dir)
                 
-                if not self.is_processing:
+                if self.stop_requested:
                     self.log_message("🛑 Processing stopped by user.", "single")
                     return
                 
@@ -405,14 +404,14 @@ class TranscriptionGUI:
                 wav_file = convert_to_wav(input_file, output_dir)
                 self.log_message("🔄 Audio converted to WAV format", "single")
                 
-                if not self.is_processing:
+                if self.stop_requested:
                     self.log_message("🛑 Processing stopped by user.", "single")
                     return
                 
                 clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
                 self.log_message(f"✅ Audio split into {len(clip_files)} clips", "single")
                 
-                if not self.is_processing:
+                if self.stop_requested:
                     self.log_message("🛑 Processing stopped by user.", "single")
                     return
                 
@@ -426,6 +425,8 @@ class TranscriptionGUI:
                 self.stop_requested = False
                 self.log_message("ℹ️ Processing finished.", "single")
         
+        self.is_processing = True
+        self.stop_requested = False
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
     
@@ -457,8 +458,9 @@ class TranscriptionGUI:
                 self.log_message(f"📁 Found {total_files} files to process", "folder")
                 
                 folder_name = os.path.basename(input_folder)
+                processed_count = 0
                 for idx, input_file in enumerate(input_files, 1):
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "folder")
                         break
                     input_file_path = os.path.join(input_folder, input_file)
@@ -469,21 +471,21 @@ class TranscriptionGUI:
                     # Step 1: Clear output folder
                     clear_output_folder(output_dir)
                     
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "folder")
                         break
                     
                     # Step 2: Convert to WAV
                     wav_file = convert_to_wav(input_file_path, output_dir)
                     
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "folder")
                         break
                     
                     # Step 3: Split audio
                     clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
                     
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "folder")
                         break
                     
@@ -491,6 +493,7 @@ class TranscriptionGUI:
                     transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers=workers, use_threads=use_threads)
                     transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
                     self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {transcript_path}", "folder")
+                    processed_count += 1
                     
                     if idx < total_files and rest_time > 0:
                         self.log_message(f"⏳ Resting for {rest_time} seconds to avoid overheating...", "folder")
@@ -498,8 +501,10 @@ class TranscriptionGUI:
                     else:
                         self.log_message("ℹ️ This is the last file, no rest needed.", "folder")
                 
-                if self.is_processing:
+                if not self.stop_requested and processed_count == total_files:
                     self.log_message("🎉 All files processed!", "folder")
+                elif self.stop_requested:
+                    self.log_message(f"🛑 Stopped after processing {processed_count}/{total_files} files.", "folder")
             except Exception as e:
                 self.log_message(f"❌ Error during folder processing: {e}", "folder")
             finally:
@@ -507,6 +512,8 @@ class TranscriptionGUI:
                 self.stop_requested = False
                 self.log_message("ℹ️ Processing finished.", "folder")
         
+        self.is_processing = True
+        self.stop_requested = False
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
     
@@ -528,16 +535,18 @@ class TranscriptionGUI:
                 
                 self.log_message(f"🧹 Found {len(transcript_files)} transcript files to clean", "both")
                 cleaned_segments_dict = {}
+                processed_count = 0
+                total_files = len(transcript_files)
                 
                 for idx, transcript_file in enumerate(transcript_files, 1):
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
                     transcript_path = os.path.join(transcript_dir, transcript_file)
                     cleaned_filename = f"clean_{transcript_file}"
                     cleaned_transcript_path = os.path.join(transcript_dir, cleaned_filename)
                     
-                    self.log_message(f"Cleaning file {idx}/{len(transcript_files)}: {transcript_file}...", "both")
+                    self.log_message(f"Cleaning file {idx}/{total_files}: {transcript_file}...", "both")
                     if os.path.exists(transcript_path):
                         with open(transcript_path, 'r', encoding='utf-8') as f:
                             text = f.read()
@@ -548,11 +557,14 @@ class TranscriptionGUI:
                             self.log_message(f"✅ Cleaning completed! Cleaned transcript saved to {cleaned_transcript_path}", "both")
                         else:
                             self.log_message(f"⚠️ No valid transcript content found for {transcript_file}", "both")
+                        processed_count += 1
                     else:
                         self.log_message(f"❌ Transcript file not found: {transcript_path}", "both")
                 
-                if self.is_processing:
+                if not self.stop_requested and processed_count == total_files:
                     self.log_message("🎉 All transcript files cleaned!", "both")
+                elif self.stop_requested:
+                    self.log_message(f"🛑 Stopped after cleaning {processed_count}/{total_files} files.", "both")
                 self.cleaned_segments_dict = cleaned_segments_dict
             except Exception as e:
                 messagebox.showerror("Error", f"Error during transcript cleaning: {e}")
@@ -562,6 +574,8 @@ class TranscriptionGUI:
                 self.stop_requested = False
                 self.log_message("ℹ️ Cleaning process finished.", "both")
         
+        self.is_processing = True
+        self.stop_requested = False
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
     
@@ -586,24 +600,29 @@ class TranscriptionGUI:
                     return
                 
                 self.log_message(f"📝 Starting conversion of {len(transcript_files)} files to SRT format", "both")
+                processed_count = 0
+                total_files = len(transcript_files)
                 
                 for idx, transcript_file in enumerate(transcript_files, 1):
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
                     srt_filename = f"{os.path.splitext(transcript_file)[0]}.srt"
                     srt_path = os.path.join(transcript_dir, srt_filename)
                     
-                    self.log_message(f"Converting file {idx}/{len(transcript_files)}: {transcript_file}...", "both")
+                    self.log_message(f"Converting file {idx}/{total_files}: {transcript_file}...", "both")
                     cleaned_segments = self.cleaned_segments_dict.get(transcript_file, [])
                     if cleaned_segments:
                         convert_to_srt(cleaned_segments, srt_path)
                         self.log_message(f"✅ Conversion completed! SRT file saved to {srt_path}", "both")
                     else:
                         self.log_message(f"⚠️ No valid cleaned content found for {transcript_file}", "both")
+                    processed_count += 1
                 
-                if self.is_processing:
+                if not self.stop_requested and processed_count == total_files:
                     self.log_message("🎉 All transcript files converted to SRT format!", "both")
+                elif self.stop_requested:
+                    self.log_message(f"🛑 Stopped after converting {processed_count}/{total_files} files.", "both")
             except Exception as e:
                 messagebox.showerror("Error", f"Error during SRT conversion: {e}")
                 self.log_message(f"❌ Error during SRT conversion: {e}", "both")
@@ -612,6 +631,8 @@ class TranscriptionGUI:
                 self.stop_requested = False
                 self.log_message("ℹ️ SRT conversion process finished.", "both")
         
+        self.is_processing = True
+        self.stop_requested = False
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
     
@@ -633,13 +654,15 @@ class TranscriptionGUI:
                 
                 blacklisted_phrases = self.load_hallucinations()
                 self.log_message(f"📝 Found {len(srt_files)} SRT files to clean", "both")
+                processed_count = 0
+                total_files = len(srt_files)
                 
                 for idx, srt_file in enumerate(srt_files, 1):
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
                     srt_path = os.path.join(transcript_dir, srt_file)
-                    self.log_message(f"Cleaning SRT file {idx}/{len(srt_files)}: {srt_file}...", "both")
+                    self.log_message(f"Cleaning SRT file {idx}/{total_files}: {srt_file}...", "both")
                     output_path = os.path.join(transcript_dir, f"cleaned_{srt_file}")
                     
                     if os.path.exists(srt_path):
@@ -663,9 +686,12 @@ class TranscriptionGUI:
                             f.write("\n\n".join(cleaned_entries))
                         
                         self.log_message(f"🧹 Cleaned {srt_file}! Removed {removed_count} entries", "both")
+                        processed_count += 1
                 
-                if self.is_processing:
+                if not self.stop_requested and processed_count == total_files:
                     self.log_message("🎉 All SRT files cleaned!", "both")
+                elif self.stop_requested:
+                    self.log_message(f"🛑 Stopped after cleaning {processed_count}/{total_files} SRT files.", "both")
             except Exception as e:
                 messagebox.showerror("Error", f"Error during SRT cleaning: {e}")
                 self.log_message(f"❌ Error during SRT cleaning: {e}", "both")
@@ -674,6 +700,8 @@ class TranscriptionGUI:
                 self.stop_requested = False
                 self.log_message("ℹ️ SRT cleaning process finished.", "both")
         
+        self.is_processing = True
+        self.stop_requested = False
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
     
@@ -703,21 +731,21 @@ class TranscriptionGUI:
                     self.log_message("🚀 Starting audio processing...", "single")
                     clear_output_folder(output_dir)
                     
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "single")
                         return
                     
                     wav_file = convert_to_wav(input_source, output_dir)
                     self.log_message("🔄 Audio converted to WAV format", "single")
                     
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "single")
                         return
                     
                     clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
                     self.log_message(f"✅ Audio split into {len(clip_files)} clips", "single")
                     
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "single")
                         return
                     
@@ -725,7 +753,7 @@ class TranscriptionGUI:
                     transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
                     self.log_message(f"🎉 Transcription completed! Saved to {transcript_path}", "single")
                     
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "single")
                         return
                 
@@ -753,10 +781,11 @@ class TranscriptionGUI:
                     
                     total_files = len(input_files)
                     self.log_message(f"📁 Found {total_files} files to process", "folder")
+                    processed_count = 0
                     
                     folder_name = os.path.basename(input_folder)
                     for idx, input_file in enumerate(input_files, 1):
-                        if not self.is_processing:
+                        if self.stop_requested:
                             self.log_message("🛑 Processing stopped by user.", "folder")
                             break
                         input_file_path = os.path.join(input_folder, input_file)
@@ -766,25 +795,26 @@ class TranscriptionGUI:
                         
                         clear_output_folder(output_dir)
                         
-                        if not self.is_processing:
+                        if self.stop_requested:
                             self.log_message("🛑 Processing stopped by user.", "folder")
                             break
                         
                         wav_file = convert_to_wav(input_file_path, output_dir)
                         
-                        if not self.is_processing:
+                        if self.stop_requested:
                             self.log_message("🛑 Processing stopped by user.", "folder")
                             break
                         
                         clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
                         
-                        if not self.is_processing:
+                        if self.stop_requested:
                             self.log_message("🛑 Processing stopped by user.", "folder")
                             break
                         
                         transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers=workers, use_threads=use_threads)
                         transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
                         self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {transcript_path}", "folder")
+                        processed_count += 1
                         
                         if idx < total_files and rest_time > 0:
                             self.log_message(f"⏳ Resting for {rest_time} seconds to avoid overheating...", "folder")
@@ -792,11 +822,10 @@ class TranscriptionGUI:
                         else:
                             self.log_message("ℹ️ This is the last file, no rest needed.", "folder")
                     
-                    if self.is_processing:
+                    if not self.stop_requested and processed_count == total_files:
                         self.log_message("🎉 All files processed!", "folder")
-                    
-                    if not self.is_processing:
-                        self.log_message("🛑 Processing stopped by user.", "folder")
+                    elif self.stop_requested:
+                        self.log_message(f"🛑 Stopped after processing {processed_count}/{total_files} files.", "folder")
                         return
                 
                 # Common steps for both single file and folder after transcription
@@ -814,15 +843,17 @@ class TranscriptionGUI:
                 # Step 2: Clean Transcripts
                 self.log_message("🧹 Cleaning transcript files...", "both")
                 cleaned_segments_dict = {}
+                processed_clean_count = 0
+                total_transcripts = len(transcript_files)
                 for idx, transcript_file in enumerate(transcript_files, 1):
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
                     transcript_path = os.path.join(transcript_dir, transcript_file)
                     cleaned_filename = f"clean_{transcript_file}"
                     cleaned_transcript_path = os.path.join(transcript_dir, cleaned_filename)
                     
-                    self.log_message(f"Cleaning file {idx}/{len(transcript_files)}: {transcript_file}...", "both")
+                    self.log_message(f"Cleaning file {idx}/{total_transcripts}: {transcript_file}...", "both")
                     if os.path.exists(transcript_path):
                         with open(transcript_path, 'r', encoding='utf-8') as f:
                             text = f.read()
@@ -833,37 +864,40 @@ class TranscriptionGUI:
                             self.log_message(f"✅ Cleaning completed! Cleaned transcript saved to {cleaned_transcript_path}", "both")
                         else:
                             self.log_message(f"⚠️ No valid transcript content found for {transcript_file}", "both")
+                        processed_clean_count += 1
                     else:
                         self.log_message(f"❌ Transcript file not found: {transcript_path}", "both")
                 
                 self.cleaned_segments_dict = cleaned_segments_dict
-                if self.is_processing:
+                if not self.stop_requested and processed_clean_count == total_transcripts:
                     self.log_message("🎉 All transcript files cleaned!", "both")
-                
-                if not self.is_processing:
+                elif self.stop_requested:
+                    self.log_message(f"🛑 Stopped after cleaning {processed_clean_count}/{total_transcripts} transcript files.", "both")
                     return
                 
                 # Step 3: Convert to SRT
                 self.log_message(f"📝 Starting conversion of {len(transcript_files)} files to SRT format", "both")
+                processed_srt_count = 0
                 for idx, transcript_file in enumerate(transcript_files, 1):
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
                     srt_filename = f"{os.path.splitext(transcript_file)[0]}.srt"
                     srt_path = os.path.join(transcript_dir, srt_filename)
                     
-                    self.log_message(f"Converting file {idx}/{len(transcript_files)}: {transcript_file}...", "both")
+                    self.log_message(f"Converting file {idx}/{total_transcripts}: {transcript_file}...", "both")
                     cleaned_segments = self.cleaned_segments_dict.get(transcript_file, [])
                     if cleaned_segments:
                         convert_to_srt(cleaned_segments, srt_path)
                         self.log_message(f"✅ Conversion completed! SRT file saved to {srt_path}", "both")
                     else:
                         self.log_message(f"⚠️ No valid cleaned content found for {transcript_file}", "both")
+                    processed_srt_count += 1
                 
-                if self.is_processing:
+                if not self.stop_requested and processed_srt_count == total_transcripts:
                     self.log_message("🎉 All transcript files converted to SRT format!", "both")
-                
-                if not self.is_processing:
+                elif self.stop_requested:
+                    self.log_message(f"🛑 Stopped after converting {processed_srt_count}/{total_transcripts} files to SRT.", "both")
                     return
                 
                 # Step 4: Clean SRT Files
@@ -874,13 +908,15 @@ class TranscriptionGUI:
                 
                 blacklisted_phrases = self.load_hallucinations()
                 self.log_message(f"📝 Found {len(srt_files)} SRT files to clean", "both")
+                processed_clean_srt_count = 0
+                total_srt_files = len(srt_files)
                 
                 for idx, srt_file in enumerate(srt_files, 1):
-                    if not self.is_processing:
+                    if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
                     srt_path = os.path.join(transcript_dir, srt_file)
-                    self.log_message(f"Cleaning SRT file {idx}/{len(srt_files)}: {srt_file}...", "both")
+                    self.log_message(f"Cleaning SRT file {idx}/{total_srt_files}: {srt_file}...", "both")
                     output_path = os.path.join(transcript_dir, f"cleaned_{srt_file}")
                     
                     if os.path.exists(srt_path):
@@ -904,9 +940,12 @@ class TranscriptionGUI:
                             f.write("\n\n".join(cleaned_entries))
                         
                         self.log_message(f"🧹 Cleaned {srt_file}! Removed {removed_count} entries", "both")
+                        processed_clean_srt_count += 1
                 
-                if self.is_processing:
+                if not self.stop_requested and processed_clean_srt_count == total_srt_files:
                     self.log_message("🎉 All SRT files cleaned! One-Click SRT Processing Complete!", "both")
+                elif self.stop_requested:
+                    self.log_message(f"🛑 Stopped after cleaning {processed_clean_srt_count}/{total_srt_files} SRT files.", "both")
             except Exception as e:
                 messagebox.showerror("Error", f"Error during One-Click SRT processing: {e}")
                 self.log_message(f"❌ Error during One-Click SRT processing: {e}", "both")
@@ -915,6 +954,8 @@ class TranscriptionGUI:
                 self.stop_requested = False
                 self.log_message("ℹ️ One-Click SRT process finished.", "both")
         
+        self.is_processing = True
+        self.stop_requested = False
         self.current_thread = threading.Thread(target=run, daemon=True)
         self.current_thread.start()
     
