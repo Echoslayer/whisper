@@ -459,6 +459,9 @@ class TranscriptionGUI:
                 self.log_message(f"📁 Found {total_files} files to process", "folder")
                 
                 folder_name = os.path.basename(input_folder)
+                transcript_dir = os.path.join(os.path.dirname(output_dir), 'transcripts', folder_name)
+                Path(transcript_dir).mkdir(parents=True, exist_ok=True)
+                
                 processed_count = 0
                 for idx, input_file in enumerate(input_files, 1):
                     if self.stop_requested:
@@ -466,7 +469,7 @@ class TranscriptionGUI:
                         break
                     input_file_path = os.path.join(input_folder, input_file)
                     base_name = os.path.splitext(input_file)[0]
-                    transcript_filename = f"{folder_name}_{base_name}.txt"
+                    transcript_filename = f"{base_name}.txt"
                     self.log_message(f"🚀 Processing file {idx}/{total_files}: {input_file}...", "folder")
                     
                     # Step 1: Clear output folder
@@ -492,8 +495,10 @@ class TranscriptionGUI:
                     
                     # Step 4: Transcribe audio (ensure this completes before moving to the next file)
                     transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers=workers, use_threads=use_threads)
-                    transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
+                    transcript_path = os.path.join(transcript_dir, transcript_filename)
+                    os.rename(os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename), transcript_path)
                     self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {transcript_path}", "folder")
+                    
                     processed_count += 1
                     
                     if idx < total_files and rest_time > 0:
@@ -528,7 +533,11 @@ class TranscriptionGUI:
                     messagebox.showerror("Error", f"Transcript directory not found: {transcript_dir}")
                     return
                 
-                transcript_files = [f for f in os.listdir(transcript_dir) if f.endswith('.txt') and not f.startswith('clean_')]
+                transcript_files = []
+                for root, _, files in os.walk(transcript_dir):
+                    for f in files:
+                        if f.endswith('.txt') and not f.startswith('clean_'):
+                            transcript_files.append(os.path.join(root, f))
                 
                 if not transcript_files:
                     messagebox.showerror("Error", f"No transcript files found in {transcript_dir}")
@@ -539,20 +548,20 @@ class TranscriptionGUI:
                 processed_count = 0
                 total_files = len(transcript_files)
                 
-                for idx, transcript_file in enumerate(transcript_files, 1):
+                for idx, transcript_path in enumerate(transcript_files, 1):
                     if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
-                    transcript_path = os.path.join(transcript_dir, transcript_file)
+                    transcript_file = os.path.basename(transcript_path)
                     cleaned_filename = f"clean_{transcript_file}"
-                    cleaned_transcript_path = os.path.join(transcript_dir, cleaned_filename)
+                    cleaned_transcript_path = os.path.join(os.path.dirname(transcript_path), cleaned_filename)
                     
                     self.log_message(f"Cleaning file {idx}/{total_files}: {transcript_file}...", "both")
                     if os.path.exists(transcript_path):
                         with open(transcript_path, 'r', encoding='utf-8') as f:
                             text = f.read()
                         cleaned_segments = clean_transcription(text)
-                        cleaned_segments_dict[transcript_file] = cleaned_segments
+                        cleaned_segments_dict[transcript_path] = cleaned_segments
                         if cleaned_segments:
                             save_cleaned_transcription(cleaned_segments, cleaned_transcript_path)
                             self.log_message(f"✅ Cleaning completed! Cleaned transcript saved to {cleaned_transcript_path}", "both")
@@ -590,7 +599,11 @@ class TranscriptionGUI:
                     messagebox.showerror("Error", f"Transcript directory not found: {transcript_dir}")
                     return
                 
-                transcript_files = [f for f in os.listdir(transcript_dir) if f.endswith('.txt') and not f.startswith('clean_')]
+                transcript_files = []
+                for root, _, files in os.walk(transcript_dir):
+                    for f in files:
+                        if f.endswith('.txt') and not f.startswith('clean_'):
+                            transcript_files.append(os.path.join(root, f))
                 
                 if not transcript_files:
                     messagebox.showerror("Error", f"No transcript files found in {transcript_dir}")
@@ -604,15 +617,16 @@ class TranscriptionGUI:
                 processed_count = 0
                 total_files = len(transcript_files)
                 
-                for idx, transcript_file in enumerate(transcript_files, 1):
+                for idx, transcript_path in enumerate(transcript_files, 1):
                     if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
+                    transcript_file = os.path.basename(transcript_path)
                     srt_filename = f"{os.path.splitext(transcript_file)[0]}.srt"
-                    srt_path = os.path.join(transcript_dir, srt_filename)
+                    srt_path = os.path.join(os.path.dirname(transcript_path), srt_filename)
                     
                     self.log_message(f"Converting file {idx}/{total_files}: {transcript_file}...", "both")
-                    cleaned_segments = self.cleaned_segments_dict.get(transcript_file, [])
+                    cleaned_segments = self.cleaned_segments_dict.get(transcript_path, [])
                     if cleaned_segments:
                         convert_to_srt(cleaned_segments, srt_path)
                         self.log_message(f"✅ Conversion completed! SRT file saved to {srt_path}", "both")
@@ -647,7 +661,11 @@ class TranscriptionGUI:
                     messagebox.showerror("Error", f"Transcript directory not found: {transcript_dir}")
                     return
                 
-                srt_files = [f for f in os.listdir(transcript_dir) if f.endswith('.srt') and not f.startswith('cleaned_')]
+                srt_files = []
+                for root, _, files in os.walk(transcript_dir):
+                    for f in files:
+                        if f.endswith('.srt') and not f.startswith('cleaned_'):
+                            srt_files.append(os.path.join(root, f))
                 
                 if not srt_files:
                     messagebox.showerror("Error", f"No SRT files found in {transcript_dir}")
@@ -658,13 +676,13 @@ class TranscriptionGUI:
                 processed_count = 0
                 total_files = len(srt_files)
                 
-                for idx, srt_file in enumerate(srt_files, 1):
+                for idx, srt_path in enumerate(srt_files, 1):
                     if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
-                    srt_path = os.path.join(transcript_dir, srt_file)
+                    srt_file = os.path.basename(srt_path)
                     self.log_message(f"Cleaning SRT file {idx}/{total_files}: {srt_file}...", "both")
-                    output_path = os.path.join(transcript_dir, f"cleaned_{srt_file}")
+                    output_path = os.path.join(os.path.dirname(srt_path), f"cleaned_{srt_file}")
                     
                     if os.path.exists(srt_path):
                         with open(srt_path, 'r', encoding='utf-8') as f:
@@ -782,16 +800,20 @@ class TranscriptionGUI:
                     
                     total_files = len(input_files)
                     self.log_message(f"📁 Found {total_files} files to process", "folder")
-                    processed_count = 0
                     
                     folder_name = os.path.basename(input_folder)
+                    transcript_dir = os.path.join(os.path.dirname(output_dir), 'transcripts', folder_name)
+                    Path(transcript_dir).mkdir(parents=True, exist_ok=True)
+                    
+                    processed_count = 0
+                    
                     for idx, input_file in enumerate(input_files, 1):
                         if self.stop_requested:
                             self.log_message("🛑 Processing stopped by user.", "folder")
                             break
                         input_file_path = os.path.join(input_folder, input_file)
                         base_name = os.path.splitext(input_file)[0]
-                        transcript_filename = f"{folder_name}_{base_name}.txt"
+                        transcript_filename = f"{base_name}.txt"
                         self.log_message(f"🚀 Processing file {idx}/{total_files}: {input_file}...", "folder")
                         
                         clear_output_folder(output_dir)
@@ -813,8 +835,10 @@ class TranscriptionGUI:
                             break
                         
                         transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers=workers, use_threads=use_threads)
-                        transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
+                        transcript_path = os.path.join(transcript_dir, transcript_filename)
+                        os.rename(os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename), transcript_path)
                         self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {transcript_path}", "folder")
+                        
                         processed_count += 1
                         
                         if idx < total_files and rest_time > 0:
@@ -835,7 +859,11 @@ class TranscriptionGUI:
                     messagebox.showerror("Error", f"Transcript directory not found: {transcript_dir}")
                     return
                 
-                transcript_files = [f for f in os.listdir(transcript_dir) if f.endswith('.txt') and not f.startswith('clean_')]
+                transcript_files = []
+                for root, _, files in os.walk(transcript_dir):
+                    for f in files:
+                        if f.endswith('.txt') and not f.startswith('clean_'):
+                            transcript_files.append(os.path.join(root, f))
                 
                 if not transcript_files:
                     messagebox.showerror("Error", f"No transcript files found in {transcript_dir}")
@@ -846,20 +874,20 @@ class TranscriptionGUI:
                 cleaned_segments_dict = {}
                 processed_clean_count = 0
                 total_transcripts = len(transcript_files)
-                for idx, transcript_file in enumerate(transcript_files, 1):
+                for idx, transcript_path in enumerate(transcript_files, 1):
                     if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
-                    transcript_path = os.path.join(transcript_dir, transcript_file)
+                    transcript_file = os.path.basename(transcript_path)
                     cleaned_filename = f"clean_{transcript_file}"
-                    cleaned_transcript_path = os.path.join(transcript_dir, cleaned_filename)
+                    cleaned_transcript_path = os.path.join(os.path.dirname(transcript_path), cleaned_filename)
                     
                     self.log_message(f"Cleaning file {idx}/{total_transcripts}: {transcript_file}...", "both")
                     if os.path.exists(transcript_path):
                         with open(transcript_path, 'r', encoding='utf-8') as f:
                             text = f.read()
                         cleaned_segments = clean_transcription(text)
-                        cleaned_segments_dict[transcript_file] = cleaned_segments
+                        cleaned_segments_dict[transcript_path] = cleaned_segments
                         if cleaned_segments:
                             save_cleaned_transcription(cleaned_segments, cleaned_transcript_path)
                             self.log_message(f"✅ Cleaning completed! Cleaned transcript saved to {cleaned_transcript_path}", "both")
@@ -879,15 +907,16 @@ class TranscriptionGUI:
                 # Step 3: Convert to SRT
                 self.log_message(f"📝 Starting conversion of {len(transcript_files)} files to SRT format", "both")
                 processed_srt_count = 0
-                for idx, transcript_file in enumerate(transcript_files, 1):
+                for idx, transcript_path in enumerate(transcript_files, 1):
                     if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
+                    transcript_file = os.path.basename(transcript_path)
                     srt_filename = f"{os.path.splitext(transcript_file)[0]}.srt"
-                    srt_path = os.path.join(transcript_dir, srt_filename)
+                    srt_path = os.path.join(os.path.dirname(transcript_path), srt_filename)
                     
                     self.log_message(f"Converting file {idx}/{total_transcripts}: {transcript_file}...", "both")
-                    cleaned_segments = self.cleaned_segments_dict.get(transcript_file, [])
+                    cleaned_segments = self.cleaned_segments_dict.get(transcript_path, [])
                     if cleaned_segments:
                         convert_to_srt(cleaned_segments, srt_path)
                         self.log_message(f"✅ Conversion completed! SRT file saved to {srt_path}", "both")
@@ -902,7 +931,12 @@ class TranscriptionGUI:
                     return
                 
                 # Step 4: Clean SRT Files
-                srt_files = [f for f in os.listdir(transcript_dir) if f.endswith('.srt') and not f.startswith('cleaned_')]
+                srt_files = []
+                for root, _, files in os.walk(transcript_dir):
+                    for f in files:
+                        if f.endswith('.srt') and not f.startswith('cleaned_'):
+                            srt_files.append(os.path.join(root, f))
+                
                 if not srt_files:
                     self.log_message("❌ No SRT files found to clean", "both")
                     return
@@ -912,13 +946,13 @@ class TranscriptionGUI:
                 processed_clean_srt_count = 0
                 total_srt_files = len(srt_files)
                 
-                for idx, srt_file in enumerate(srt_files, 1):
+                for idx, srt_path in enumerate(srt_files, 1):
                     if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "both")
                         break
-                    srt_path = os.path.join(transcript_dir, srt_file)
+                    srt_file = os.path.basename(srt_path)
                     self.log_message(f"Cleaning SRT file {idx}/{total_srt_files}: {srt_file}...", "both")
-                    output_path = os.path.join(transcript_dir, f"cleaned_{srt_file}")
+                    output_path = os.path.join(os.path.dirname(srt_path), f"cleaned_{srt_file}")
                     
                     if os.path.exists(srt_path):
                         with open(srt_path, 'r', encoding='utf-8') as f:
