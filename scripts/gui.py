@@ -155,7 +155,7 @@ class TranscriptionGUI:
         self.output_dir_folder_entry = ttk.Entry(self.folder_frame, width=50)
         self.output_dir_folder_entry.grid(row=1, column=1, padx=5, pady=5)
         self.output_dir_folder_entry.insert(0, self.DEFAULT_CLIP_OUTPUT_DIR)
-        ttk.Button(self.folder_frame, text="Browse", command=self.browse_output_dir_folder).grid(row=1, column=2, padx=5, pady=5)
+        ttk.Button(self.folder_frame, text="Browse", command=self.browse_clip_output_dir_folder).grid(row=1, column=2, padx=5, pady=5)
         
         ttk.Label(self.folder_frame, text="Clip Duration (min):").grid(row=2, column=0, padx=5, pady=5, sticky='w')
         self.clip_duration_min = ttk.Scale(self.folder_frame, from_=1, to=30, orient='horizontal')
