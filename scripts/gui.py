@@ -315,6 +315,12 @@ class TranscriptionGUI:
             self.output_dir_folder_entry.delete(0, tk.END)
             self.output_dir_folder_entry.insert(0, foldername)
     
+    def browse_clip_output_dir_folder(self):
+        foldername = filedialog.askdirectory()
+        if foldername:
+            self.output_dir_folder_entry.delete(0, tk.END)
+            self.output_dir_folder_entry.insert(0, foldername)
+
     def browse_transcript_output_dir_folder(self):
         foldername = filedialog.askdirectory()
         if foldername:
