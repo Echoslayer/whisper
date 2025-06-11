@@ -156,7 +156,7 @@ def transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, langua
         workers: Number of parallel threads or processes to use for transcription (default: 2)
         use_threads: If True, use multithreading; if False, use multiprocessing (default: True)
     """
-    transcript_dir = os.path.join(output_dir, "../transcripts")
+    transcript_dir = os.path.join(os.path.dirname(output_dir), "transcripts")
     Path(transcript_dir).mkdir(parents=True, exist_ok=True)
     transcript_file = os.path.join(transcript_dir, transcript_filename)
 
