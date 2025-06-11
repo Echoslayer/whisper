@@ -161,8 +161,10 @@ class TranscriptionGUI:
         ttk.Label(self.folder_frame, text="Transcript Output Directory:").grid(row=2, column=0, padx=5, pady=5, sticky='w')
         self.transcript_output_dir_folder_entry = ttk.Entry(self.folder_frame, width=50)
         self.transcript_output_dir_folder_entry.grid(row=2, column=1, padx=5, pady=5)
-        # Set default transcript dir to input folder's transcripts subfolder
-        default_transcript_dir = os.path.join(self.DEFAULT_INPUT_FOLDER, "transcripts")
+        # Set default transcript dir to data/transcripts
+        default_transcript_dir = os.path.abspath(os.path.join(self.DEFAULT_INPUT_FOLDER, "..", "transcripts"))
+        if not os.path.exists(default_transcript_dir):
+            os.makedirs(default_transcript_dir, exist_ok=True)
         self.transcript_output_dir_folder_entry.insert(0, default_transcript_dir)
         ttk.Button(self.folder_frame, text="Browse", command=self.browse_transcript_output_dir_folder).grid(row=2, column=2, padx=5, pady=5)
 
@@ -280,8 +282,10 @@ class TranscriptionGUI:
         if foldername:
             self.input_folder_entry.delete(0, tk.END)
             self.input_folder_entry.insert(0, foldername)
-            # Dynamically update transcript output dir to input folder's transcripts subfolder
-            transcript_dir = os.path.join(foldername, "transcripts")
+            # Dynamically update transcript output dir to data/transcripts
+            transcript_dir = os.path.abspath(os.path.join(foldername, "..", "transcripts"))
+            if not os.path.exists(transcript_dir):
+                os.makedirs(transcript_dir, exist_ok=True)
             self.transcript_output_dir_folder_entry.delete(0, tk.END)
             self.transcript_output_dir_folder_entry.insert(0, transcript_dir)
     
