@@ -497,10 +497,10 @@ class TranscriptionGUI:
                 total_files = len(input_files)
                 self.log_message(f"📁 Found {total_files} files to process", "folder")
                 
-                folder_name = os.path.basename(input_folder)
-                transcript_dir = os.path.join(os.path.dirname(output_dir), 'transcripts', folder_name)
+                # Always save transcript to <input_folder>/transcripts
+                transcript_dir = os.path.join(input_folder, "transcripts")
                 Path(transcript_dir).mkdir(parents=True, exist_ok=True)
-                
+
                 processed_count = 0
                 for idx, input_file in enumerate(input_files, 1):
                     if self.stop_requested:
@@ -510,28 +510,28 @@ class TranscriptionGUI:
                     base_name = os.path.splitext(input_file)[0]
                     transcript_filename = f"{base_name}.txt"
                     self.log_message(f"🚀 Processing file {idx}/{total_files}: {input_file}...", "folder")
-                    
+
                     # Step 1: Clear output folder
                     clear_output_folder(output_dir)
-                    
+
                     if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "folder")
                         break
-                    
+
                     # Step 2: Convert to WAV
                     wav_file = convert_to_wav(input_file_path, output_dir)
-                    
+
                     if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "folder")
                         break
-                    
+
                     # Step 3: Split audio
                     clip_files = split_audio(wav_file, clip_duration_sec, output_dir)
-                    
+
                     if self.stop_requested:
                         self.log_message("🛑 Processing stopped by user.", "folder")
                         break
-                    
+
                     # Step 4: Transcribe audio (ensure this completes before moving to the next file)
                     # Save transcript to the correct subfolder
                     transcribe_audio(
@@ -550,9 +550,9 @@ class TranscriptionGUI:
                     if os.path.exists(src_transcript_path):
                         os.replace(src_transcript_path, dst_transcript_path)
                     self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {dst_transcript_path}", "folder")
-                    
+
                     processed_count += 1
-                    
+
                     if idx < total_files and rest_time > 0:
                         self.log_message(f"⏳ Resting for {rest_time} seconds to avoid overheating...", "folder")
                         time.sleep(rest_time)
