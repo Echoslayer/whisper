@@ -24,7 +24,7 @@ class TranscriptionGUI:
         # Default configuration values
         self.DEFAULT_INPUT_FILE = "../data/demo/demo.wav"
         self.DEFAULT_INPUT_FOLDER = "../data/demo"
-        self.DEFAULT_CLIP_OUTPUT_DIR = "../data/output_clips"
+        self.DEFAULT_CLIP_OUTPUT_DIR = os.path.join(self.DEFAULT_INPUT_FOLDER, "output_clips")
         self.DEFAULT_CLIP_DURATION_SEC = 15  # in seconds for single file
         self.DEFAULT_CLIP_DURATION_MIN = 0.25  # in minutes for folder processing (15 seconds)
         self.DEFAULT_WHISPER_EXEC = "../whisper.cpp/build/bin/whisper-cli"
@@ -151,6 +151,7 @@ class TranscriptionGUI:
         self.input_folder_entry.grid(row=0, column=1, padx=5, pady=5)
         self.input_folder_entry.insert(0, self.DEFAULT_INPUT_FOLDER)
         ttk.Button(self.folder_frame, text="Browse", command=self.browse_input_folder).grid(row=0, column=2, padx=5, pady=5)
+        self.input_folder_entry.bind("<FocusOut>", self.update_output_clip_dir)
 
         ttk.Label(self.folder_frame, text="Output Directory:").grid(row=1, column=0, padx=5, pady=5, sticky='w')
         self.output_dir_folder_entry = ttk.Entry(self.folder_frame, width=50)
@@ -301,7 +302,14 @@ class TranscriptionGUI:
             self.transcript_output_dir_single_entry.delete(0, tk.END)
             self.transcript_output_dir_single_entry.insert(0, foldername)
 
-    def browse_clip_output_dir_folder(self):
+    def update_output_clip_dir(self, event=None):
+        """Update the output clip directory based on the input folder."""
+        input_folder = self.input_folder_entry.get()
+        output_clip_dir = os.path.join(input_folder, "output_clips")
+        if not os.path.exists(output_clip_dir):
+            os.makedirs(output_clip_dir, exist_ok=True)
+        self.output_dir_folder_entry.delete(0, tk.END)
+        self.output_dir_folder_entry.insert(0, output_clip_dir)
         foldername = filedialog.askdirectory()
         if foldername:
             self.output_dir_folder_entry.delete(0, tk.END)
@@ -474,7 +482,9 @@ class TranscriptionGUI:
         def run():
             try:
                 input_folder = self.input_folder_entry.get()
-                output_dir = self.output_dir_folder_entry.get()
+                output_dir = os.path.join(input_folder, "output_clips")
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir, exist_ok=True)
                 clip_duration_sec = int(self.clip_duration_min.get()) * 60  # Convert minutes to seconds
                 whisper_exec = self.whisper_exec_folder_entry.get()
                 whisper_model = self.whisper_model_folder_entry.get()
