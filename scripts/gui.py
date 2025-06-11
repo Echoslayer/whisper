@@ -164,7 +164,7 @@ class TranscriptionGUI:
         self.transcript_output_dir_folder_entry = ttk.Entry(self.folder_frame, width=50)
         self.transcript_output_dir_folder_entry.grid(row=3, column=1, padx=5, pady=5)
         self.transcript_output_dir_folder_entry.insert(0, "../data/transcripts")
-        ttk.Button(self.folder_frame, text="Browse", command=self.browse_transcript_output_dir_folder).grid(row=3, column=2, padx=5, pady=5)
+        ttk.Button(self.folder_frame, text="Browse", command=self.browse_transcript_output_dir_single).grid(row=3, column=2, padx=5, pady=5)
         self.clip_duration_min.set(self.DEFAULT_CLIP_DURATION_MIN)
         self.clip_duration_min_label = ttk.Label(self.folder_frame, text=str(self.DEFAULT_CLIP_DURATION_MIN))
         self.clip_duration_min_label.grid(row=2, column=2, padx=5, pady=5)
