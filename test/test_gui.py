@@ -42,11 +42,11 @@ def test_browse_input_folder(app, mocker):
     assert app.input_folder_entry.get() == "/path/to/folder"
     assert app.transcript_output_dir_folder_entry.get() == "/path/to/folder/transcripts"
 
-def test_browse_clip_output_dir_single(app, mocker):
-    """Test the browse output directory functionality for single file tab."""
+def test_browse_clip_output_dir_folder(app, mocker):
+    """Test the browse output directory functionality for folder tab."""
     mock_folder = mocker.patch('tkinter.filedialog.askdirectory', return_value="/path/to/output")
-    app.browse_clip_output_dir_single()
-    assert app.output_dir_single_entry.get() == "/path/to/output"
+    app.browse_clip_output_dir_folder()
+    assert app.output_dir_folder_entry.get() == "/path/to/output"
 
 def test_browse_whisper_exec_single(app, mocker):
     """Test the browse whisper executable functionality for single file tab."""
