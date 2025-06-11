@@ -334,7 +334,7 @@ class TranscriptionGUI:
             self.progress_text = message
         elif any(phrase in message.lower() for phrase in ["completed", "all files processed", "error", "stopped by user", "finished"]):
             self.is_processing = False
-            self.progress_text = ""
+            # Do NOT clear self.progress_text here, so the dots remain after finish
     
     def update_progress_animation(self):
         """Update the progress animation text if a process is running."""
@@ -350,6 +350,10 @@ class TranscriptionGUI:
                 self.folder_status_text.delete(1.0, tk.END)
                 self.folder_status_text.insert(tk.END, animated_text + "\n")
                 self.folder_status_text.see(tk.END)
+            self._progress_animating = True
+        else:
+            # Only clear the animation flag, do not update the dots or clear the status text
+            self._progress_animating = False
         self.root.after(500, self.update_progress_animation)
     
     def check_queue(self):
