@@ -518,10 +518,23 @@ class TranscriptionGUI:
                         break
                     
                     # Step 4: Transcribe audio (ensure this completes before moving to the next file)
-                    transcribe_audio(clip_files, output_dir, whisper_exec, whisper_model, language, transcript_filename, workers=workers, use_threads=use_threads)
-                    transcript_path = os.path.join(transcript_dir, transcript_filename)
-                    os.rename(os.path.join(transcript_dir, transcript_filename), transcript_path)
-                    self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {transcript_path}", "folder")
+                    # Save transcript to the correct subfolder
+                    transcribe_audio(
+                        clip_files,
+                        output_dir,
+                        whisper_exec,
+                        whisper_model,
+                        language,
+                        transcript_filename=transcript_filename,
+                        workers=workers,
+                        use_threads=use_threads
+                    )
+                    # Move transcript to the correct subfolder if not already there
+                    src_transcript_path = os.path.join(os.path.dirname(output_dir), 'transcripts', transcript_filename)
+                    dst_transcript_path = os.path.join(transcript_dir, transcript_filename)
+                    if os.path.exists(src_transcript_path):
+                        os.replace(src_transcript_path, dst_transcript_path)
+                    self.log_message(f"✅ File {idx}/{total_files} processed! Transcript saved to {dst_transcript_path}", "folder")
                     
                     processed_count += 1
                     
