@@ -125,3 +125,15 @@ print(response)
 添加一個中斷按鈕以及一個合適的區域顯示 log 
 ---
 目前的 log 區域會刷掉過去 log, 我要一個區域是過去 log. 一個是現在一直更新的 log, 且注意不要讓底下的按鈕被吃掉
+---
+更改 scripts/gui.py 與 notebooks/gen_folder_transcripts.ipynb，讓 folder process 的是先建立一個同樣的資料夾名稱在 data/transcripts，再將節錄後的逐字稿儲存為同音檔名的 txt, srt 
+---
+請修改目前 scripts/gui.py 
+１ 修正 output folder gui 的名稱為 clip_output_folder
+2 添加一個 輸入欄位為 txt, srt 的儲存 folder, 而非與 clip wav 儲存在一起
+3 finish 之後 '...' 不要繼續動
+---
+請修正 folder process 中的 gui 間距 目前有重疊情形，然後更改 transcripts.txt 的 folder 預設為輸入資料夾 如果更改輸入影片也會動態更改預設 transcript 儲存資料夾 
+---
+在 folder process 中，output_clip 的資料夾請更改為: 輸入資料夾/output_clips 而非共用目前的 transcripts/ 資料夾，且添加動態變換邏輯如果更改輸入影片也會動態更改預設output_clips  儲存資料夾 
+---
