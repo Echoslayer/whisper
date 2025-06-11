@@ -145,86 +145,88 @@ class TranscriptionGUI:
         self.single_log_text['yscrollcommand'] = single_scrollbar.set
         
         # Setup Folder Tab
+        # Folder Tab Layout (fixed grid row/column for no overlap)
         ttk.Label(self.folder_frame, text="Input Folder:").grid(row=0, column=0, padx=5, pady=5, sticky='w')
         self.input_folder_entry = ttk.Entry(self.folder_frame, width=50)
         self.input_folder_entry.grid(row=0, column=1, padx=5, pady=5)
         self.input_folder_entry.insert(0, self.DEFAULT_INPUT_FOLDER)
         ttk.Button(self.folder_frame, text="Browse", command=self.browse_input_folder).grid(row=0, column=2, padx=5, pady=5)
-        
+
         ttk.Label(self.folder_frame, text="Output Directory:").grid(row=1, column=0, padx=5, pady=5, sticky='w')
         self.output_dir_folder_entry = ttk.Entry(self.folder_frame, width=50)
         self.output_dir_folder_entry.grid(row=1, column=1, padx=5, pady=5)
         self.output_dir_folder_entry.insert(0, self.DEFAULT_CLIP_OUTPUT_DIR)
         ttk.Button(self.folder_frame, text="Browse", command=self.browse_clip_output_dir_folder).grid(row=1, column=2, padx=5, pady=5)
-        
+
         ttk.Label(self.folder_frame, text="Transcript Output Directory:").grid(row=2, column=0, padx=5, pady=5, sticky='w')
         self.transcript_output_dir_folder_entry = ttk.Entry(self.folder_frame, width=50)
         self.transcript_output_dir_folder_entry.grid(row=2, column=1, padx=5, pady=5)
-        self.transcript_output_dir_folder_entry.insert(0, "../data/transcripts")
+        # Set default transcript dir to input folder
+        self.transcript_output_dir_folder_entry.insert(0, self.DEFAULT_INPUT_FOLDER)
         ttk.Button(self.folder_frame, text="Browse", command=self.browse_transcript_output_dir_folder).grid(row=2, column=2, padx=5, pady=5)
 
         ttk.Label(self.folder_frame, text="Clip Duration (min):").grid(row=3, column=0, padx=5, pady=5, sticky='w')
         self.clip_duration_min = ttk.Scale(self.folder_frame, from_=1, to=30, orient='horizontal')
-        self.clip_duration_min.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
+        self.clip_duration_min.grid(row=3, column=1, padx=5, pady=5, sticky='ew')
         self.clip_duration_min.set(self.DEFAULT_CLIP_DURATION_MIN)
         self.clip_duration_min_label = ttk.Label(self.folder_frame, text=str(self.DEFAULT_CLIP_DURATION_MIN))
-        self.clip_duration_min_label.grid(row=2, column=2, padx=5, pady=5)
+        self.clip_duration_min_label.grid(row=3, column=2, padx=5, pady=5)
         self.clip_duration_min.bind("<ButtonRelease-1>", self.update_clip_duration_min_label)
-        
-        ttk.Label(self.folder_frame, text="Whisper Executable:").grid(row=3, column=0, padx=5, pady=5, sticky='w')
+
+        ttk.Label(self.folder_frame, text="Whisper Executable:").grid(row=4, column=0, padx=5, pady=5, sticky='w')
         self.whisper_exec_folder_entry = ttk.Entry(self.folder_frame, width=50)
-        self.whisper_exec_folder_entry.grid(row=3, column=1, padx=5, pady=5)
+        self.whisper_exec_folder_entry.grid(row=4, column=1, padx=5, pady=5)
         self.whisper_exec_folder_entry.insert(0, self.DEFAULT_WHISPER_EXEC)
-        ttk.Button(self.folder_frame, text="Browse", command=self.browse_whisper_exec_folder).grid(row=3, column=2, padx=5, pady=5)
-        
-        ttk.Label(self.folder_frame, text="Whisper Model:").grid(row=4, column=0, padx=5, pady=5, sticky='w')
+        ttk.Button(self.folder_frame, text="Browse", command=self.browse_whisper_exec_folder).grid(row=4, column=2, padx=5, pady=5)
+
+        ttk.Label(self.folder_frame, text="Whisper Model:").grid(row=5, column=0, padx=5, pady=5, sticky='w')
         self.whisper_model_folder_entry = ttk.Entry(self.folder_frame, width=50)
-        self.whisper_model_folder_entry.grid(row=4, column=1, padx=5, pady=5)
+        self.whisper_model_folder_entry.grid(row=5, column=1, padx=5, pady=5)
         self.whisper_model_folder_entry.insert(0, self.DEFAULT_WHISPER_MODEL)
-        ttk.Button(self.folder_frame, text="Browse", command=self.browse_whisper_model_folder).grid(row=4, column=2, padx=5, pady=5)
-        
-        ttk.Label(self.folder_frame, text="Language:").grid(row=5, column=0, padx=5, pady=5, sticky='w')
+        ttk.Button(self.folder_frame, text="Browse", command=self.browse_whisper_model_folder).grid(row=5, column=2, padx=5, pady=5)
+
+        ttk.Label(self.folder_frame, text="Language:").grid(row=6, column=0, padx=5, pady=5, sticky='w')
         self.language_folder = ttk.Combobox(self.folder_frame, values=["zh", "en"], state='readonly')
-        self.language_folder.grid(row=5, column=1, padx=5, pady=5, sticky='w')
+        self.language_folder.grid(row=6, column=1, padx=5, pady=5, sticky='w')
         self.language_folder.set(self.DEFAULT_LANGUAGE)
-        
-        ttk.Label(self.folder_frame, text="Workers:").grid(row=6, column=0, padx=5, pady=5, sticky='w')
+
+        ttk.Label(self.folder_frame, text="Workers:").grid(row=7, column=0, padx=5, pady=5, sticky='w')
         self.workers_folder = ttk.Scale(self.folder_frame, from_=1, to=8, orient='horizontal')
-        self.workers_folder.grid(row=6, column=1, padx=5, pady=5, sticky='ew')
+        self.workers_folder.grid(row=7, column=1, padx=5, pady=5, sticky='ew')
         self.workers_folder.set(self.DEFAULT_WORKERS)
         self.workers_folder_label = ttk.Label(self.folder_frame, text=str(self.DEFAULT_WORKERS))
-        self.workers_folder_label.grid(row=6, column=2, padx=5, pady=5)
+        self.workers_folder_label.grid(row=7, column=2, padx=5, pady=5)
         self.workers_folder.bind("<ButtonRelease-1>", self.update_workers_folder_label)
-        
-        ttk.Label(self.folder_frame, text="Parallel Method:").grid(row=7, column=0, padx=5, pady=5, sticky='w')
+
+        ttk.Label(self.folder_frame, text="Parallel Method:").grid(row=8, column=0, padx=5, pady=5, sticky='w')
         self.use_threads_folder = ttk.Combobox(self.folder_frame, values=["Multithreading", "Multiprocessing"], state='readonly')
-        self.use_threads_folder.grid(row=7, column=1, padx=5, pady=5, sticky='w')
+        self.use_threads_folder.grid(row=8, column=1, padx=5, pady=5, sticky='w')
         self.use_threads_folder.set("Multithreading" if self.DEFAULT_USE_THREADS else "Multiprocessing")
-        
-        ttk.Label(self.folder_frame, text="Rest Time (sec):").grid(row=8, column=0, padx=5, pady=5, sticky='w')
+
+        ttk.Label(self.folder_frame, text="Rest Time (sec):").grid(row=9, column=0, padx=5, pady=5, sticky='w')
         self.rest_time = ttk.Scale(self.folder_frame, from_=0, to=600, orient='horizontal')
-        self.rest_time.grid(row=8, column=1, padx=5, pady=5, sticky='ew')
+        self.rest_time.grid(row=9, column=1, padx=5, pady=5, sticky='ew')
         self.rest_time.set(self.DEFAULT_REST_TIME)
         self.rest_time_label = ttk.Label(self.folder_frame, text=str(self.DEFAULT_REST_TIME))
-        self.rest_time_label.grid(row=8, column=2, padx=5, pady=5)
+        self.rest_time_label.grid(row=9, column=2, padx=5, pady=5)
         self.rest_time.bind("<ButtonRelease-1>", self.update_rest_time_label)
         
         # Frame for process buttons in Folder Tab
         folder_button_frame = ttk.Frame(self.folder_frame)
-        folder_button_frame.grid(row=9, column=0, columnspan=3, pady=10)
+        folder_button_frame.grid(row=10, column=0, columnspan=3, pady=10)
         ttk.Button(folder_button_frame, text="Process Folder", command=self.process_folder).pack(side='left', padx=5)
         ttk.Button(folder_button_frame, text="Stop Processing", command=self.stop_processing).pack(side='left', padx=5)
-        
+
         # Current Status Log Area for Folder (updates continuously)
         folder_status_frame = ttk.Frame(self.folder_frame)
-        folder_status_frame.grid(row=10, column=0, columnspan=3, padx=5, pady=5, sticky='ew')
+        folder_status_frame.grid(row=11, column=0, columnspan=3, padx=5, pady=5, sticky='ew')
         ttk.Label(folder_status_frame, text="Current Status:").pack(side='top', anchor='w')
         self.folder_status_text = tk.Text(folder_status_frame, height=2, width=80, wrap=tk.WORD)
         self.folder_status_text.pack(side='left', fill='x', expand=True, padx=5, pady=5)
-        
+
         # Historical Log Text Area for Folder (persists all logs)
         folder_log_frame = ttk.Frame(self.folder_frame)
-        folder_log_frame.grid(row=11, column=0, columnspan=3, padx=5, pady=5, sticky='nsew')
+        folder_log_frame.grid(row=12, column=0, columnspan=3, padx=5, pady=5, sticky='nsew')
         ttk.Label(folder_log_frame, text="Historical Logs:").pack(side='top', anchor='w')
         self.folder_log_text = tk.Text(folder_log_frame, height=8, width=80, wrap=tk.WORD)
         self.folder_log_text.pack(side='left', fill='both', expand=True, padx=5, pady=5)
@@ -245,7 +247,7 @@ class TranscriptionGUI:
         self.single_frame.grid_columnconfigure(1, weight=1)
         self.single_frame.grid_rowconfigure(11, weight=1)
         self.folder_frame.grid_columnconfigure(1, weight=1)
-        self.folder_frame.grid_rowconfigure(11, weight=1)
+        self.folder_frame.grid_rowconfigure(12, weight=1)
         
         # Check queue for updates
         self.root.after(100, self.check_queue)
@@ -277,6 +279,9 @@ class TranscriptionGUI:
         if foldername:
             self.input_folder_entry.delete(0, tk.END)
             self.input_folder_entry.insert(0, foldername)
+            # Dynamically update transcript output dir to match input folder
+            self.transcript_output_dir_folder_entry.delete(0, tk.END)
+            self.transcript_output_dir_folder_entry.insert(0, foldername)
     
     def browse_clip_output_dir_single(self):
         foldername = filedialog.askdirectory()
