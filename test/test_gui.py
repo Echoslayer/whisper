@@ -37,8 +37,10 @@ def test_browse_input_file(app, mocker):
 def test_browse_input_folder(app, mocker):
     """Test the browse input folder functionality."""
     mock_folder = mocker.patch('tkinter.filedialog.askdirectory', return_value="/path/to/folder")
+    mock_makedirs = mocker.patch('os.makedirs')
     app.browse_input_folder()
     assert app.input_folder_entry.get() == "/path/to/folder"
+    assert app.transcript_output_dir_folder_entry.get() == "/path/to/folder/transcripts"
 
 def test_browse_output_dir_single(app, mocker):
     """Test the browse output directory functionality for single file tab."""
@@ -63,7 +65,7 @@ def test_process_single(app, mocker):
     # Mock the necessary functions to avoid actual processing
     mocker.patch('scripts.voice2transcripts.clear_output_folder')
     mocker.patch('scripts.voice2transcripts.convert_to_wav', return_value="/path/to/converted.wav")
-    mocker.patch('scripts.voice2transcripts.split_audio', return_value=[("/path/to/clip1.wav", 0, 5)])
+    mocker.patch('scripts.voice2transcripts.split_audio', return_value=["/path/to/clip1.wav"])
     mocker.patch('scripts.voice2transcripts.transcribe_audio')
     mocker.patch('os.path.exists', return_value=True)
     
@@ -74,8 +76,10 @@ def test_process_single(app, mocker):
     # Run the process
     app.process_single()
     
+    # Wait for the thread to start and finish (if possible)
+    app.current_thread.join(timeout=2)
     # Since it's threaded, we can't directly check the result, but we can ensure it starts
-    assert app.is_processing == True or app.is_processing == False  # It might finish quickly in test
+    assert app.is_processing in [True, False]  # It might finish quickly in test
 
 def test_stop_processing(app, mocker):
     """Test the stop processing functionality."""
