@@ -26,7 +26,7 @@ class TranscriptionGUI:
         self.DEFAULT_INPUT_FOLDER = "../data/demo"
         self.DEFAULT_OUTPUT_DIR = "../data/output_clips"
         self.DEFAULT_CLIP_DURATION_SEC = 15  # in seconds for single file
-        self.DEFAULT_CLIP_DURATION_MIN = 1  # in minutes for folder processing
+        self.DEFAULT_CLIP_DURATION_MIN = 0.25  # in minutes for folder processing (15 seconds)
         self.DEFAULT_WHISPER_EXEC = "../whisper.cpp/build/bin/whisper-cli"
         self.DEFAULT_WHISPER_MODEL = "../whisper.cpp/models/ggml-medium.bin"
         self.DEFAULT_LANGUAGE = "zh"
