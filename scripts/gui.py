@@ -67,9 +67,9 @@ class TranscriptionGUI:
         ttk.Button(self.single_frame, text="Browse", command=self.browse_input_file).grid(row=0, column=2, padx=5, pady=5)
         
         ttk.Label(self.single_frame, text="Output Directory:").grid(row=1, column=0, padx=5, pady=5, sticky='w')
-        self.clip_output_dir_single_entry = ttk.Entry(self.single_frame, width=50)
-        self.clip_output_dir_single_entry.grid(row=1, column=1, padx=5, pady=5)
-        self.clip_output_dir_single_entry.insert(0, self.DEFAULT_CLIP_OUTPUT_DIR)
+        self.output_dir_single_entry = ttk.Entry(self.single_frame, width=50)
+        self.output_dir_single_entry.grid(row=1, column=1, padx=5, pady=5)
+        self.output_dir_single_entry.insert(0, self.DEFAULT_CLIP_OUTPUT_DIR)
         ttk.Button(self.single_frame, text="Browse", command=self.browse_clip_output_dir_single).grid(row=1, column=2, padx=5, pady=5)
         
         ttk.Label(self.single_frame, text="Transcript Output Directory:").grid(row=2, column=0, padx=5, pady=5, sticky='w')
