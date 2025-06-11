@@ -24,7 +24,7 @@ class TranscriptionGUI:
         # Default configuration values
         self.DEFAULT_INPUT_FILE = "../data/demo/demo.wav"
         self.DEFAULT_INPUT_FOLDER = "../data/demo"
-        self.DEFAULT_OUTPUT_DIR = "../data/output_clips"
+        self.DEFAULT_CLIP_OUTPUT_DIR = "../data/output_clips"
         self.DEFAULT_CLIP_DURATION_SEC = 15  # in seconds for single file
         self.DEFAULT_CLIP_DURATION_MIN = 0.25  # in minutes for folder processing (15 seconds)
         self.DEFAULT_WHISPER_EXEC = "../whisper.cpp/build/bin/whisper-cli"
@@ -67,12 +67,18 @@ class TranscriptionGUI:
         ttk.Button(self.single_frame, text="Browse", command=self.browse_input_file).grid(row=0, column=2, padx=5, pady=5)
         
         ttk.Label(self.single_frame, text="Output Directory:").grid(row=1, column=0, padx=5, pady=5, sticky='w')
-        self.output_dir_single_entry = ttk.Entry(self.single_frame, width=50)
-        self.output_dir_single_entry.grid(row=1, column=1, padx=5, pady=5)
-        self.output_dir_single_entry.insert(0, self.DEFAULT_OUTPUT_DIR)
-        ttk.Button(self.single_frame, text="Browse", command=self.browse_output_dir_single).grid(row=1, column=2, padx=5, pady=5)
+        self.clip_output_dir_single_entry = ttk.Entry(self.single_frame, width=50)
+        self.clip_output_dir_single_entry.grid(row=1, column=1, padx=5, pady=5)
+        self.clip_output_dir_single_entry.insert(0, self.DEFAULT_CLIP_OUTPUT_DIR)
+        ttk.Button(self.single_frame, text="Browse", command=self.browse_clip_output_dir_single).grid(row=1, column=2, padx=5, pady=5)
         
-        ttk.Label(self.single_frame, text="Clip Duration (sec):").grid(row=2, column=0, padx=5, pady=5, sticky='w')
+        ttk.Label(self.single_frame, text="Transcript Output Directory:").grid(row=2, column=0, padx=5, pady=5, sticky='w')
+        self.transcript_output_dir_single_entry = ttk.Entry(self.single_frame, width=50)
+        self.transcript_output_dir_single_entry.grid(row=2, column=1, padx=5, pady=5)
+        self.transcript_output_dir_single_entry.insert(0, "../data/transcripts")
+        ttk.Button(self.single_frame, text="Browse", command=self.browse_transcript_output_dir_single).grid(row=2, column=2, padx=5, pady=5)
+
+        ttk.Label(self.single_frame, text="Clip Duration (sec):").grid(row=3, column=0, padx=5, pady=5, sticky='w')
         self.clip_duration_sec = ttk.Scale(self.single_frame, from_=1, to=1800, orient='horizontal')
         self.clip_duration_sec.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
         self.clip_duration_sec.set(self.DEFAULT_CLIP_DURATION_SEC)
@@ -266,13 +272,19 @@ class TranscriptionGUI:
             self.input_folder_entry.delete(0, tk.END)
             self.input_folder_entry.insert(0, foldername)
     
-    def browse_output_dir_single(self):
+    def browse_clip_output_dir_single(self):
         foldername = filedialog.askdirectory()
         if foldername:
             self.output_dir_single_entry.delete(0, tk.END)
             self.output_dir_single_entry.insert(0, foldername)
     
-    def browse_output_dir_folder(self):
+    def browse_transcript_output_dir_single(self):
+        foldername = filedialog.askdirectory()
+        if foldername:
+            self.transcript_output_dir_single_entry.delete(0, tk.END)
+            self.transcript_output_dir_single_entry.insert(0, foldername)
+
+    def browse_clip_output_dir_folder(self):
         foldername = filedialog.askdirectory()
         if foldername:
             self.output_dir_folder_entry.delete(0, tk.END)
@@ -308,7 +320,7 @@ class TranscriptionGUI:
         if "Starting" in message or "Processing" in message:
             self.is_processing = True
             self.progress_text = message
-        elif any(phrase in message.lower() for phrase in ["completed", "all files processed", "error", "stopped by user"]):
+        elif any(phrase in message.lower() for phrase in ["completed", "all files processed", "error", "stopped by user", "finished"]):
             self.is_processing = False
             self.progress_text = ""
     
