@@ -161,8 +161,9 @@ class TranscriptionGUI:
         ttk.Label(self.folder_frame, text="Transcript Output Directory:").grid(row=2, column=0, padx=5, pady=5, sticky='w')
         self.transcript_output_dir_folder_entry = ttk.Entry(self.folder_frame, width=50)
         self.transcript_output_dir_folder_entry.grid(row=2, column=1, padx=5, pady=5)
-        # Set default transcript dir to input folder
-        self.transcript_output_dir_folder_entry.insert(0, self.DEFAULT_INPUT_FOLDER)
+        # Set default transcript dir to input folder's transcripts subfolder
+        default_transcript_dir = os.path.join(self.DEFAULT_INPUT_FOLDER, "transcripts")
+        self.transcript_output_dir_folder_entry.insert(0, default_transcript_dir)
         ttk.Button(self.folder_frame, text="Browse", command=self.browse_transcript_output_dir_folder).grid(row=2, column=2, padx=5, pady=5)
 
         ttk.Label(self.folder_frame, text="Clip Duration (min):").grid(row=3, column=0, padx=5, pady=5, sticky='w')
@@ -279,9 +280,10 @@ class TranscriptionGUI:
         if foldername:
             self.input_folder_entry.delete(0, tk.END)
             self.input_folder_entry.insert(0, foldername)
-            # Dynamically update transcript output dir to match input folder
+            # Dynamically update transcript output dir to input folder's transcripts subfolder
+            transcript_dir = os.path.join(foldername, "transcripts")
             self.transcript_output_dir_folder_entry.delete(0, tk.END)
-            self.transcript_output_dir_folder_entry.insert(0, foldername)
+            self.transcript_output_dir_folder_entry.insert(0, transcript_dir)
     
     def browse_clip_output_dir_single(self):
         foldername = filedialog.askdirectory()
