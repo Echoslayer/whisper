@@ -41,6 +41,7 @@ def test_browse_input_folder(app, mocker):
     app.browse_input_folder()
     assert app.input_folder_entry.get() == "/path/to/folder"
     assert app.transcript_output_dir_folder_entry.get() == "/path/to/folder/transcripts"
+    assert app.output_dir_folder_entry.get() == "/path/to/folder/output_clips"
 
 def test_browse_clip_output_dir_single(app, mocker):
     """Test the browse output directory functionality for single file tab."""
