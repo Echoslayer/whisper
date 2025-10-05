@@ -23,3 +23,6 @@ tree -I 'whisper.cpp|output_clips' > doc/doc_tree.md
 uv run pytest test/
 
 uv run scripts/gui.py
+
+轉換 mov
+ffmpeg -i 2025.mov -q:a 0 -map a output.mp3
